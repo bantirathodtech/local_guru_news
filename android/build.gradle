@@ -1,3 +1,36 @@
+// ==================================================
+// Project-level Build Configuration
+// ==================================================
+// This file defines dependencies for ALL modules in the project
+
+buildscript {
+    ext.kotlin_version = '2.1.0'
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Android Gradle Plugin - version must match settings.gradle
+        // Compatibility: AGP 8.6.0 requires Gradle 8.7
+        classpath "com.android.tools.build:gradle:8.6.0"
+
+        // Kotlin Gradle Plugin - version must match settings.gradle
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+        // ==================================================
+        // FIREBASE SETUP (Optional - Uncomment if using Firebase)
+        // ==================================================
+        // 1. Uncomment below line
+        // 2. Add google-services.json to android/app/
+        // 3. Uncomment plugin in app/build.gradle
+        // classpath "com.google.gms:google-services:4.4.2"
+    }
+}
+
+// ==================================================
+// Repository Configuration for ALL modules
+// ==================================================
 allprojects {
     repositories {
         google()
@@ -5,14 +38,19 @@ allprojects {
     }
 }
 
-rootProject.buildDir = "../build"
+// ==================================================
+// Build Directory Configuration
+// ==================================================
+rootProject.buildDir = '../build'
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
-    project.evaluationDependsOn(":app")
+    project.evaluationDependsOn(':app')
 }
 
+// ==================================================
+// Clean Task
+// ==================================================
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

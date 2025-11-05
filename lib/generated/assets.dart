@@ -3,10 +3,20 @@ class Assets {
   Assets._();
 
   static const String assetsPlaceholdersUser = 'assets/placeholders/user.png';
-  static const String iconsAppIcon = 'assets/icons/app_icon.png';
+  static const String iconsComment = 'assets/icons/comment.svg';
+  static const String iconsDislike = 'assets/icons/dislike.svg';
+  static const String iconsLike = 'assets/icons/like.svg';
   static const String iconsMenu = 'assets/icons/menu.svg';
+  static const String iconsMore = 'assets/icons/more.svg';
+  static const String iconsWhatsapp = 'assets/icons/whatsapp.svg';
   static const String imagesComingSoon = 'assets/images/coming_soon.jpg';
   static const String imagesLocalGuru = 'assets/images/local_guru.png';
+  static const String logoAppIcon = 'assets/icons/logo/app_icon.png';
+  static const String logoLocalGuru = 'assets/icons/logo/local_guru.png';
   static const String lottieLogo = 'assets/lottie/logo.json';
   static const String placeholdersUser = 'assets/placeholders/user.jpg';
+  static const String tabsGreeting = 'assets/icons/tabs/greeting.svg';
+  static const String tabsJob = 'assets/icons/tabs/job.svg';
+  static const String tabsListing = 'assets/icons/tabs/listing.svg';
+  static const String tabsNews = 'assets/icons/tabs/news.svg';
 }

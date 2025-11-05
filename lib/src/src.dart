@@ -1,110 +1,42 @@
 //! ________________________[News]______________________
 
-//todo =======>[Models]<=======
-export 'models/news_module/posts_Model.dart'; // Posts
-export 'models/news_module/postModelById.dart'; // Single Post
-export 'models/news_module/commentsModel.dart'; // Comments
-export 'models/news_module/topics_Model.dart'; // Topics
-export 'models/news_module/politicians_Model.dart'; //Politicians
-//////////
-export 'modules/news_module/models/postsPaginationModel.dart'; // Posts
-export 'modules/news_module/models/postIndividualModel.dart'; // Single Post
-export 'modules/news_module/models/commentsPagination.dart'; // Comments
-export 'modules/news_module/models/replyCommentsPagination.dart'; // Reply Comments
-export 'modules/news_module/models/topicsModel.dart'; // Topics
-export 'modules/news_module/models/politiciansModel.dart'; // Politicians
-
-//todo =======>[Views]<=======
-export 'modules/news_module/views/news_dashboard.dart'; // News Dashboard Screen
-export 'modules/news_module/views/postViewScreen.dart'; //Posts
-export 'modules/news_module/views/postViewSingle.dart'; //Single Post
-export 'modules/news_module/views/commentsScreen.dart'; //Comments
-export 'modules/news_module/views/replyCommentsScreen.dart'; //Reply Comments
-export 'modules/news_module/views/newCommentScreen.dart'; // New Comment
-export 'modules/news_module/views/searchScreen.dart'; //Search
-export 'modules/news_module/views/followers.dart'; //Followers
-
-//todo =======>[Controllers]<=======
-export 'modules/news_module/controllers/postPaginationController.dart'; // Posts
-export 'modules/news_module/controllers/postIndividualController.dart'; // Single Post
-export 'modules/news_module/controllers/commentsPaginationController.dart'; //Comments
-export 'modules/news_module/controllers/replyCommentsPaginationController.dart'; // Reply Comments
-export 'modules/news_module/controllers/topicsController.dart'; // Topics
-export 'modules/news_module/controllers/politiciansControllers.dart'; // Politicians
-
-//todo =======>[Services]<=======
-export 'modules/news_module/services/postPaginationService.dart'; // Posts Service
-export 'modules/news_module/services/postIndividualService.dart'; // Single Post Service
-export 'modules/news_module/services/commentsPaginationService.dart'; // Comments Service
-export 'modules/news_module/services/replyCommentsPaginationService.dart'; // Reply Comments Service
-export 'modules/news_module/services/topicsService.dart'; // Topics
-export 'modules/news_module/services/politiciansServices.dart'; // Politicans
-
 //todo =======>[Components]<=======
-export 'modules/news_module/components/newsLayoutComponent.dart'; // News Layout Component
-export 'modules/news_module/components/socialBanner.dart'; // SocialBanner Component
-export 'modules/news_module/components/topicListComponent.dart'; // Topics List Component
-export 'modules/news_module/components/videoItem.dart'; // Video Item Component
-export 'modules/news_module/components/politiciansLayout.dart'; // Politicians Component
-export 'modules/news_module/components/news_shimmer.dart'; // News Shimmers
-
-//! ________________________[End News]__________________
-
-//! ________________________[Jobs]______________________
-
-//todo =======>[Models]<=======
-export 'models/jobs_module/jobsModel.dart'; //Jobs Posts
-export 'models/jobs_module/newJobDataModel.dart'; //New Job Data
-export 'models/jobs_module/jobSearchModel.dart'; //Job Search
-//////////
-export 'modules/jobs_module/models/jobsPagination.dart';
-export 'modules/jobs_module/models/jobSearchPagination.dart';
-
-//todo =======>[Views]<=======
-export 'modules/jobs_module/views/jobs_dashboard.dart'; //Jobs
-export 'modules/jobs_module/views/jobs_details.dart'; //Jobs Details
-export 'modules/jobs_module/views/new_job.dart'; //Add New Job
-export 'modules/jobs_module/views/job_search.dart'; //Search Job
-
-//todo =======>[Controllers]<=======
-export 'modules/jobs_module/controllers/jobsPaginationController.dart';
-export 'modules/jobs_module/controllers/jobSearchPaginationController.dart';
-
+export 'core/components/drawer/custom_drawer.dart'; // Custom Drawer Component
+// export 'core/components//drawer.dart'; // Drawer Component (commented out)
+export 'core/components/errorBody.dart'; // Error Body
+export 'core/components/hexColorComponent.dart'; // Hex Color Component
+export 'core/components/paginated_list/paginated_list_view.dart'; // Reusable Paginated List View
+export 'core/components/paginated_list/rss_cache_manager.dart'; // RSS Cache Manager
+export 'core/services//exception/errorException.dart'; // Error Exception Service
 //todo =======>[Services]<=======
-export 'modules/jobs_module/services/jobPaginationService.dart'; //Jobs Posts
-export 'modules/jobs_module/services/jobSearchPaginationService.dart';
-
-//todo =======>[Components]<=======
-export 'modules/jobs_module/components/jobComponent.dart'; // JobLayout Component
-
-//! ________________________[End Jobs]______________________
-
-//! ________________________[Listings]______________________
-
-//todo =======>[Models]<=======
-export 'models/listings_module/listTopics.dart'; //Lists Topics
-export 'models/listings_module/listsModel.dart'; //Lists Posts
-export 'models/listings_module/listSearchModel.dart'; //Search Posts
-//////////
-export 'modules/listing_module/models/listsPostPaginationModel.dart'; //Lists Posts
-export 'modules/listing_module/models/listSearchPaginationModel.dart'; //Lists Posts
-
-//todo =======>[Views]<=======
-export 'modules/listing_module/views/listings_dashboard.dart';
-export 'modules/listing_module/views/listsDetails.dart';
-export 'modules/listing_module/views/lists_Search.dart';
-
-//todo =======>[Controllers]<=======
-export 'modules/listing_module/controllers/listsPostPaginationController.dart';
-export 'modules/listing_module/controllers/listsSearchPaginationController.dart';
-
-//todo =======>[Services]<=======
-export 'modules/listing_module/services/listsPaginationService.dart';
-export 'modules/listing_module/services/listSearchPaginationService.dart';
-
-//todo =======>[Components]<=======
-export 'modules/listing_module/components/listsTopicComponent.dart';
-
+export 'core/services/api/databaseService.dart'; // Database Service
+export 'core/services/firebase/firebaseServices.dart'; // Firebase Service
+export 'core/services/notifications/notificationService.dart'; // Notification Service
+export 'core/services/riverpod/riverpodService.dart'; // Riverpod Service|Statemanagement Service
+//todo =======>[Utils]<=======
+export 'core/utils/assets.dart'; //Assets
+export 'core/utils/colors.dart'; //Colors
+export 'core/utils/responsiveService.dart'; // Responsive Service
+export 'core/utils/strings.dart'; //Strings
+export 'core/utils/timeAgo.dart'; // TimeAgo Service
+export 'features/auth/data/model/mobileAuth_Model.dart'; // Mobile Auth Model (data layer)
+// export 'features/auth/otp/otp_auth_screen.dart';
+// export 'features/auth/profile/profileScreen.dart'; // Profile
+// export 'features/auth/signin/mobileAuthScreen.dart'; // Mobile Auth
+// NEW: Auth (data/model)
+export 'features/auth/data/model/userModel.dart'; // User Model (data layer)
+// NEW: Auth (data/repository)
+export 'features/auth/data/repository/auth_repository.dart'; // Auth Repository
+// export 'features/auth/view/screens/forget/forgot_otp_v2.dart';
+export 'features/auth/view/screens/forget/forgot_password_v2.dart';
+// export 'features/auth/view/screens/otp/otp_v2.dart';
+export 'features/auth/view/screens/profile/profile_v2.dart';
+// NEW: Auth V2 Screens
+export 'features/auth/view/screens/signin/sign_in_v2.dart';
+export 'features/auth/view/screens/signinup/sign_up_v2.dart';
+export 'features/auth/view/screens/splash/splash_v2.dart';
+// NEW: Auth (viewmodel)
+export 'features/auth/viewmodel/auth_provider.dart'; // Auth Provider
 //! ________________________[End Listings]______________________
 
 //! ________________________[Deals]______________________
@@ -120,57 +52,120 @@ export 'modules/listing_module/components/listsTopicComponent.dart';
 //! ________________________[Greetings]______________________
 
 //todo =======>[Models]<=======
-export 'models/greetings_module/greetingsModel.dart'; //Greetings
-export 'models/greetings_module/greetingsTopicsModel.dart'; //Greetings Topics
+export 'features/greetings/data/model/greetingsModel.dart'; //Greetings
 //////////
-export 'modules/greetings_module/models/greetingsPaginationModel.dart'; //Greetings
-export 'modules/greetings_module/models/greetingsTopicsModel.dart'; //Greetings Topics
-
-//todo =======>[Views]<=======
-export 'modules/greetings_module/views/greetings_dashboard.dart'; //Greetings
-
-//todo =======>[Controllers]<=======
-export 'modules/greetings_module/controllers/greetingsPaginationController.dart'; //Greetings
-export 'modules/greetings_module/controllers/greetingsTopicsController.dart'; //Greetings Topics
-
+export 'features/greetings/data/model/greetingsPaginationModel.dart'; //Greetings
+export 'features/greetings/data/model/greetingsTopicsModel.dart'; //Greetings Topics
 //todo =======>[Services]<=======
-export 'modules/greetings_module/services/greetingsPaginationService.dart'; //Greetings
-export 'modules/greetings_module/services/greetingsTopicsService.dart'; //Greetings Topics
-
+export 'features/greetings/data/repository/greetingsPaginationService.dart'; //Greetings
+export 'features/greetings/data/repository/greetingsTopicsService.dart'; //Greetings Topics
+//todo =======>[Views]<=======
+export 'features/greetings/view/screens/greetings_dashboard.dart'; //Greetings
 //todo =======>[Components]<=======
-export 'modules/greetings_module/components/GreetingsTopicListComponent.dart'; // Greetings Topics List Component
+export 'features/greetings/view/widgets/GreetingsTopicListComponent.dart'; // Greetings Topics List Component
+//todo =======>[Controllers]<=======
+export 'features/greetings/viewmodel/greetingsPaginationController.dart'; //Greetings
+export 'features/greetings/viewmodel/greetingsTopicsController.dart'; //Greetings Topics
+export 'features/greetings/viewmodel/greetingsTopicsModel.dart'; //Greetings Topics
+//todo =======>[Views]<=======
+export 'features/home/dashboardScreen.dart'; // Dashboard
+export 'features/jobs/data/model/jobSearchModel.dart'; //Job Search
+export 'features/jobs/data/model/jobSearchPagination.dart';
+//! ________________________[End News]__________________
 
+//! ________________________[Jobs]______________________
+
+//todo =======>[Models]<=======
+export 'features/jobs/data/model/jobsModel.dart'; //Jobs Posts
+//////////
+export 'features/jobs/data/model/jobsPagination.dart';
+export 'features/jobs/data/model/newJobDataModel.dart'; //New Job Data
+//todo =======>[Services]<=======
+export 'features/jobs/data/repository/jobPaginationService.dart'; //Jobs Posts
+export 'features/jobs/data/repository/jobSearchPaginationService.dart';
+export 'features/jobs/view/screens/job_coming.dart'; // Coming Soon
+export 'features/jobs/view/screens/job_search.dart'; //Search Job
+//todo =======>[Views]<=======
+export 'features/jobs/view/screens/jobs_dashboard.dart'; //Jobs
+export 'features/jobs/view/screens/jobs_details.dart'; //Jobs Details
+export 'features/jobs/view/screens/new_job.dart'; //Add New Job
+//todo =======>[Components]<=======
+export 'features/jobs/view/widgets/jobComponent.dart'; // JobLayout Component
+export 'features/jobs/viewmodel/jobSearchPaginationController.dart';
+//todo =======>[Controllers]<=======
+export 'features/jobs/viewmodel/jobsPaginationController.dart';
+export 'features/listing/data/model/listSearchModel.dart'; //Search Posts
+export 'features/listing/data/model/listSearchPaginationModel.dart'; //Lists Posts
+//! ________________________[End Jobs]______________________
+
+//! ________________________[Listings]______________________
+
+//todo =======>[Models]<=======
+export 'features/listing/data/model/listTopics.dart'; //Lists Topics
+export 'features/listing/data/model/listsModel.dart'; //Lists Posts
+//////////
+export 'features/listing/data/model/listsPostPaginationModel.dart'; //Lists Posts
+export 'features/listing/data/repository/listSearchPaginationService.dart';
+//todo =======>[Services]<=======
+export 'features/listing/data/repository/listsPaginationService.dart';
+export 'features/listing/view/screen/listing_coming.dart'; // Coming Soon
+//todo =======>[Views]<=======
+export 'features/listing/view/screen/listings_dashboard.dart';
+export 'features/listing/view/screen/listsDetails.dart';
+export 'features/listing/view/screen/lists_Search.dart';
+//todo =======>[Components]<=======
+export 'features/listing/view/widgets/listsTopicComponent.dart';
+//todo =======>[Controllers]<=======
+export 'features/listing/viewmodel/listsPostPaginationController.dart';
+export 'features/listing/viewmodel/listsSearchPaginationController.dart';
 //! ________________________[End Greetings]______________________
 
 //! ________________________[App]_______________
 
 //todo =======>[Models]<=======
-export 'models/locationModel.dart'; // Location Model
-export 'models/mobileAuth_Model.dart'; // Mobile Auth Model
-export 'models/userModel.dart'; // User Model
-
-//todo =======>[Views]<=======
-export 'views/dashboardScreen.dart'; // Dashboard
-export 'views/errorBody.dart'; // Error Body
-export 'views/locationScreen.dart'; // Location
-export 'views/mobileAuthScreen.dart'; // Mobile Auth
-export 'views/profileScreen.dart'; // Profile
-export 'views/coming_soon.screen.dart'; // Coming Soon
-
-//todo =======>[Components]<=======
-export 'components/drawer.dart'; // Drawer Component
-export 'components/hexColorComponent.dart'; // Hex Color Component
-
+export 'features/location/model/locationModel.dart'; // Location Model
+export 'features/location/view/screen/locationScreen.dart'; // Location
+export 'features/news/data/model/comments/all/commentsModel.dart'; // Comments
+export 'features/news/data/model/comments/all/commentsPagination.dart'; // Comments
+export 'features/news/data/model/comments/reply/replyCommentsPagination.dart'; // Reply Comments
+export 'features/news/data/model/politician/politiciansModel.dart'; // Politicians
+export 'features/news/data/model/politician/politicians_Model.dart'; //Politicians
+//////////
+export 'features/news/data/model/posts/all/postsPaginationModel.dart'; // Posts
+//todo =======>[Models]<=======
+export 'features/news/data/model/posts/all/posts_Model.dart'; // Posts
+export 'features/news/data/model/posts/individual/postIndividualModel.dart'; // Single Post
+export 'features/news/data/model/posts/postModelById.dart'; // Single Post
+export 'features/news/data/model/topics/topicsModel.dart'; // Topics
+export 'features/news/data/model/topics/topics_Model.dart'; // Topics
+export 'features/news/data/repository/comments/all/commentsPaginationService.dart'; // Comments Service
+export 'features/news/data/repository/comments/reply/replyCommentsPaginationService.dart'; // Reply Comments Service
+export 'features/news/data/repository/politician/politiciansServices.dart'; // Politicans
 //todo =======>[Services]<=======
-export 'services/databaseService.dart'; // Database Service
-export 'services/errorException.dart'; // Error Exception Service
-export 'services/firebaseServices.dart'; // Firebase Service
-export 'services/notificationService.dart'; // Notification Service
-export 'services/responsiveService.dart'; // Responsive Service
-export 'services/riverpodService.dart'; // Riverpod Service|Statemanagement Service
-export 'services/timeAgo.dart'; // TimeAgo Service
-
-//todo =======>[Utils]<=======
-export 'utils/assets.dart'; //Assets
-export 'utils/colors.dart'; //Colors
-export 'utils/strings.dart'; //Strings
+export 'features/news/data/repository/post/all/postPaginationService.dart'; // Posts Service
+export 'features/news/data/repository/post/individual/postIndividualService.dart'; // Single Post Service
+export 'features/news/data/repository/topics/topicsService.dart'; // Topics
+export 'features/news/view/screens/comments/all/commentsScreen.dart'; //Comments
+export 'features/news/view/screens/comments/reply/replyCommentsScreen.dart'; //Reply Comments
+export 'features/news/view/screens/comments/single/newCommentScreen.dart'; // New Comment
+export 'features/news/view/screens/followers/followers.dart'; //Followers
+//todo =======>[Views]<=======
+export 'features/news/view/screens/news_dashboard.dart'; // News Dashboard Screen
+export 'features/news/view/screens/post/all/postViewScreen.dart'; //Posts
+export 'features/news/view/screens/post/single/postViewSingle.dart'; //Single Post
+export 'features/news/view/screens/search/searchScreen.dart'; //Search
+//todo =======>[Components]<=======
+export 'features/news/view/widgets/newsLayoutComponent.dart'; // News Layout Component
+export 'features/news/view/widgets/news_shimmer.dart'; // News Shimmers
+export 'features/news/view/widgets/politiciansLayout.dart'; // Politicians Component
+export 'features/news/view/widgets/related_news_card.dart'; // Related News Card Component
+export 'features/news/view/widgets/socialBanner.dart'; // SocialBanner Component
+export 'features/news/view/widgets/topicListComponent.dart'; // Topics List Component
+export 'features/news/view/widgets/videoItem.dart'; // Video Item Component
+export 'features/news/viewmodel/comments/all/commentsPaginationController.dart'; //Comments
+export 'features/news/viewmodel/comments/reply/replyCommentsPaginationController.dart'; // Reply Comments
+export 'features/news/viewmodel/politician/politiciansControllers.dart'; // Politicians
+//todo =======>[Controllers]<=======
+export 'features/news/viewmodel/post/all/postPaginationController.dart'; // Posts
+export 'features/news/viewmodel/post/single/postIndividualController.dart'; // Single Post
+export 'features/news/viewmodel/topics/topicsController.dart'; // Topics

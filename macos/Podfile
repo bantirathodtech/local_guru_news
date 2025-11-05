@@ -1,5 +1,8 @@
-# platform :osx, '10.14'
+# platform :osx, '10.15'
 platform :osx, '10.15'
+
+# Pin Firebase SDK version
+$FirebaseSDKVersion = '11.6.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
