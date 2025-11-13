@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
 import 'package:sizer/sizer.dart';
 import 'package:video_player/video_player.dart';
 
@@ -26,9 +27,7 @@ class _SinglePostViewState extends State<SinglePostView> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
-        ref.watch(postIndividualControllerProvider);
-        final paginationState =
-            ref.watch(postIndividualControllerProvider.notifier).state;
+        final paginationState = ref.watch(postIndividualControllerProvider);
 
         return Builder(
           builder: (context) {
@@ -84,7 +83,11 @@ class _SinglePostViewState extends State<SinglePostView> {
                           backgroundColor: Colors.transparent,
                           leading: IconButton(
                             onPressed: () async {
-                              ref.read(postPaginationControllerProvider);
+                              AppLogger.logInfo(
+                                'Legacy single post back to list requested',
+                                tag: 'legacyNewsView',
+                              );
+                              ref.read(legacyPostPaginationControllerProvider);
 
                               Navigator.pushAndRemoveUntil(
                                   context,
@@ -118,7 +121,7 @@ class _SinglePostViewState extends State<SinglePostView> {
                             liked: paginationState.posts![0].liked!,
                             title: paginationState.posts![0].title!,
                             description: paginationState.posts![0].description!,
-                            image: paginationState.posts![0].media![0]!,
+                            image: paginationState.posts![0].media![0],
                             layout: paginationState.posts![0].layout!,
                             comments: paginationState.posts![0].comments!,
                             single: true,
@@ -264,7 +267,12 @@ class _SinglePostViewState extends State<SinglePostView> {
                                 backgroundColor: Colors.transparent,
                                 leading: IconButton(
                                   onPressed: () {
-                                    ref.read(postPaginationControllerProvider);
+                                    AppLogger.logInfo(
+                                      'Legacy single YouTube back to list',
+                                      tag: 'legacyNewsView',
+                                    );
+                                    ref.read(
+                                        legacyPostPaginationControllerProvider);
 
                                     Navigator.pushAndRemoveUntil(
                                         context,
@@ -301,7 +309,7 @@ class _SinglePostViewState extends State<SinglePostView> {
                                   title: paginationState.posts![0].title!,
                                   description:
                                       paginationState.posts![0].description!,
-                                  image: paginationState.posts![0].media![0]!,
+                                  image: paginationState.posts![0].media![0],
                                   layout: paginationState.posts![0].layout!,
                                   comments: paginationState.posts![0].comments!,
                                   single: true,
@@ -463,7 +471,12 @@ class _SinglePostViewState extends State<SinglePostView> {
                         : paginationState.posts![0].layout == "Slider"
                             ? WillPopScope(
                                 onWillPop: () async {
-                                  ref.read(postPaginationControllerProvider);
+                                  AppLogger.logInfo(
+                                    'Legacy slider post back to list',
+                                    tag: 'legacyNewsView',
+                                  );
+                                  ref.read(
+                                      legacyPostPaginationControllerProvider);
 
                                   Navigator.pushAndRemoveUntil(
                                       context,
@@ -479,8 +492,12 @@ class _SinglePostViewState extends State<SinglePostView> {
                                     backgroundColor: Colors.transparent,
                                     leading: IconButton(
                                       onPressed: () async {
+                                        AppLogger.logInfo(
+                                          'Legacy slider app bar back pressed',
+                                          tag: 'legacyNewsView',
+                                        );
                                         ref.read(
-                                            postPaginationControllerProvider);
+                                            legacyPostPaginationControllerProvider);
 
                                         Navigator.pushAndRemoveUntil(
                                             context,
@@ -519,7 +536,7 @@ class _SinglePostViewState extends State<SinglePostView> {
                                       description: paginationState
                                           .posts![0].description!,
                                       image:
-                                          paginationState.posts![0].media![0]!,
+                                          paginationState.posts![0].media![0],
                                       layout: paginationState.posts![0].layout!,
                                       comments:
                                           paginationState.posts![0].comments!,
@@ -778,7 +795,12 @@ class _SinglePostViewState extends State<SinglePostView> {
                               )
                             : WillPopScope(
                                 onWillPop: () async {
-                                  ref.read(postPaginationControllerProvider);
+                                  AppLogger.logInfo(
+                                    'Legacy default layout back to list',
+                                    tag: 'legacyNewsView',
+                                  );
+                                  ref.read(
+                                      legacyPostPaginationControllerProvider);
 
                                   Navigator.pushAndRemoveUntil(
                                       context,
@@ -792,8 +814,12 @@ class _SinglePostViewState extends State<SinglePostView> {
                                   appBar: AppBar(
                                     leading: IconButton(
                                       onPressed: () async {
+                                        AppLogger.logInfo(
+                                          'Legacy default layout app bar back',
+                                          tag: 'legacyNewsView',
+                                        );
                                         ref.read(
-                                            postPaginationControllerProvider);
+                                            legacyPostPaginationControllerProvider);
 
                                         Navigator.pushAndRemoveUntil(
                                             context,
@@ -832,7 +858,7 @@ class _SinglePostViewState extends State<SinglePostView> {
                                       description: paginationState
                                           .posts![0].description!,
                                       image:
-                                          paginationState.posts![0].media![0]!,
+                                          paginationState.posts![0].media![0],
                                       layout: paginationState.posts![0].layout!,
                                       comments:
                                           paginationState.posts![0].comments!,

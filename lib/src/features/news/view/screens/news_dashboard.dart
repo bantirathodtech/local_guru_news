@@ -5,13 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
-import 'package:local_guru_all/src/core/components/paginated_list/paginated_list_view.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
+import 'package:local_guru_all/src/features/location/viewmodel/location_provider.dart';
 import 'package:local_guru_all/src/src.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:provider/provider.dart' hide Consumer;
 import 'package:sizer/sizer.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../widgets/legacy_filter_bar.dart';
+import '../widgets/news_feed_card.dart';
 
 class NewsDashboard extends ConsumerStatefulWidget {
   const NewsDashboard({Key? key}) : super(key: key);
@@ -29,10 +32,13 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
 
     // Ensure posts are loaded when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final paginationState =
-          ref.read(postPaginationControllerProvider.notifier).state;
+      final paginationState = ref.read(legacyPostPaginationControllerProvider);
       if (paginationState.posts == null || paginationState.posts!.isEmpty) {
-        ref.read(postPaginationControllerProvider.notifier).getPosts();
+        AppLogger.logInfo(
+          'Legacy init trigger: posts empty, requesting first page',
+          tag: 'legacyNewsView',
+        );
+        ref.read(legacyPostPaginationControllerProvider.notifier).getPosts();
       }
     });
   }
@@ -46,7 +52,23 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
 
   // Load more posts called by PaginatedListView when list end reached
   void _loadMore() {
-    ref.read(postPaginationControllerProvider.notifier).getPosts();
+    AppLogger.logInfo('Legacy loadMore requested from UI',
+        tag: 'legacyNewsView');
+    ref.read(legacyPostPaginationControllerProvider.notifier).getPosts();
+  }
+
+  String _formatLandmarkLabel(String? raw) {
+    const fallback = 'Set location';
+    if (raw == null) {
+      return fallback;
+    }
+
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty || trimmed.toLowerCase() == 'null') {
+      return fallback;
+    }
+
+    return trimmed;
   }
 
   // Build individual post item (extracted for reusability)
@@ -54,146 +76,102 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
     BuildContext context,
     PostsModel post,
     int index,
-    dynamic politiciansState,
+    PoliticiansModelProvider politiciansState,
     String selectedTopic,
   ) {
-    // Thumbnail extraction logic for YouTube or default media
     String? thumbnailUrl;
     if (post.media != null && post.media!.isNotEmpty) {
-      thumbnailUrl = post.layout == "Youtube"
+      thumbnailUrl = post.layout == 'Youtube'
           ? _getYoutubeThumbnail(post.media!.first)
-          : post.media!.first;
+          : post.media!.first.toString();
     }
 
-          // Wrap each post and its social banner inside a single container
-          return Container(
-            margin: EdgeInsets.only(bottom: 4),
-            child: Column(
-              children: [
-          // Inject politicians section for political topic on even indexes
-          if (index.isEven && selectedTopic == 'political')
-            Container(
-              margin: EdgeInsets.symmetric(vertical: 12),
-              height: 22.h,
-              width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                color: Colors.blueGrey.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(16),
+    final card = NewsFeedCard(
+      post: post,
+      thumbnailUrl: thumbnailUrl,
+      onTap: () async {
+        final postIdValue = post.id;
+        if (postIdValue == null || postIdValue.isEmpty) {
+          AppLogger.logWarning(
+            'Legacy post tap skipped: missing id for index=$index',
+            tag: 'legacyNewsView',
+          );
+          return;
+        }
+
+        final currentViews = post.views?.isNotEmpty == true ? post.views! : '0';
+
+        try {
+          AppLogger.logInfo(
+            'Legacy post tapped id=$postIdValue',
+            tag: 'legacyNewsView',
+          );
+          await ref
+              .read(legacyPostPaginationControllerProvider.notifier)
+              .postViews(
+                postIdValue,
+                currentViews,
+                index,
+              );
+          ref.read(postId.notifier).state = postIdValue;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PostViewScreen(
+                index: index,
+                id: postIdValue,
+                layout: post.layout,
+                whatsCount: post.whatsApp,
+                description: post.description,
               ),
-              child: _buildPoliticiansSection(politiciansState),
             ),
-
-          // Unified News Card with News Content + Social Actions
-          Container(
-            margin: EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.grey.withOpacity(0.15),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 20,
-                  offset: Offset(0, 4),
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                  spreadRadius: 0,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Clickable news layout content area (top part)
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () async {
-                      try {
-                        await ref
-                            .read(postPaginationControllerProvider.notifier)
-                            .postViews(
-                              post.id!,
-                              post.views!,
-                              index,
-                            );
-                        ref.read(postId.notifier).state = post.id.toString();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => PostViewScreen(
-                              index: index,
-                              id: post.id,
-                              layout: post.layout,
-                              whatsCount: post.whatsApp,
-                              description: post.description,
-                            ),
-                          ),
-                        );
-                      } catch (e) {
-                        developer.log('Error in post tap: $e');
-                      }
-                    },
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                    child: NewsLayoutComponent(
-                      id: post.id ?? '',
-                      title: post.title,
-                      description: post.description,
-                      media: thumbnailUrl != null ? [thumbnailUrl] : post.media ?? [],
-                      time: post.time,
-                      channel: post.channel,
-                      channelImage: post.channelImage,
-                      layout: post.layout,
-                      view: post.views,
-                      index: index,
-                    ),
-                  ),
-                ),
-
-                // Subtle divider line between news and social
-                Container(
-                  height: 1,
-                  margin: EdgeInsets.symmetric(horizontal: 20),
-                  color: Colors.grey.withOpacity(0.1),
-                ),
-
-                // Social banner with interaction buttons (bottom part)
-                SocialBanner(
-                  id: post.id ?? 'default-id',
-                  index: index,
-                  likes: post.likes ?? '',
-                  dislikes: post.dislikes ?? '',
-                  whatsCount: post.whatsApp,
-                  liked: post.liked ?? '',
-                  title: post.title,
-                  description: post.description,
-                  image: thumbnailUrl ??
-                      (post.media != null && post.media!.isNotEmpty
-                          ? post.media![0]
-                          : ''),
-                  layout: post.layout,
-                  single: false,
-                  comments: post.comments ?? '',
-                ),
-              ],
-            ),
-          ),
-        ],
+          );
+        } catch (e, stackTrace) {
+          developer.log('Error in post tap: $e');
+          AppLogger.logError('Legacy post tap failed: $e',
+              tag: 'legacyNewsView', stackTrace: stackTrace);
+        }
+      },
+      footer: SocialBanner(
+        id: post.id ?? 'default-id',
+        index: index,
+        likes: post.likes ?? '',
+        dislikes: post.dislikes ?? '',
+        whatsCount: post.whatsApp,
+        liked: post.liked ?? '',
+        title: post.title,
+        description: post.description,
+        image: thumbnailUrl ??
+            (post.media != null && post.media!.isNotEmpty
+                ? post.media![0]
+                : ''),
+        layout: post.layout,
+        single: false,
+        comments: post.comments ?? '',
       ),
     );
+
+    if (index.isEven && selectedTopic == 'political') {
+      return Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            height: 22.h,
+            width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+              color: Colors.blueGrey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: _buildPoliticiansSection(politiciansState),
+          ),
+          card,
+        ],
+      );
+    }
+
+    return card;
   }
 
-  // Utility to extract YouTube thumbnail URL from video URL
   String? _getYoutubeThumbnail(String? youtubeUrl) {
     try {
       if (youtubeUrl == null || youtubeUrl.isEmpty) {
@@ -223,25 +201,57 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
           .log('NewsDashboard build method called - screen is being rendered');
       print('NewsDashboard build method called - screen is being rendered');
 
-      // Watching providers to rebuild when state changes
-      ref.watch(topicsGreetingsControllerProvider);
-      final topicsState = ref.watch(topicsControllerProvider);
+      final paginationState = ref.watch(legacyPostPaginationControllerProvider);
+      final politiciansState = ref.watch(politiciansControllerProvider);
 
-      ref.watch(postPaginationControllerProvider);
-      final paginationState =
-          ref.watch(postPaginationControllerProvider.notifier).state;
+      AppLogger.logInfo(
+        'Legacy UI state received: page=${paginationState.page}, posts=${paginationState.posts?.length ?? 0}',
+        tag: 'legacyNewsView',
+      );
 
-      ref.watch(politiciansControllerProvider);
-      final politiciansState =
-          ref.watch(politiciansControllerProvider.notifier).state;
+      final politicians = (politiciansState.politicians ?? [])
+          .where((entry) => (entry.type ?? '').toLowerCase() == 'politician')
+          .toList();
+      final selectedLandmarkRaw = ref.watch(selectedLocation);
+      final selectedLandmarkLabel = _formatLandmarkLabel(selectedLandmarkRaw);
 
       return SafeArea(
         child: Scaffold(
           appBar: CustomAppBar(
-            title: 'News',
+            title: 'Local Guru News',
             backgroundColor: AppColors.primary,
             iconColor: AppColors.black,
             titleColor: AppColors.black,
+            actions: [
+              Semantics(
+                label: 'Selected landmark: $selectedLandmarkLabel',
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        color: AppColors.black,
+                      ),
+                      const SizedBox(width: 4),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 140),
+                        child: Text(
+                          selectedLandmarkLabel,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.black,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           drawer: const CustomDrawer(),
           floatingActionButton: ref.watch(topic) == 'political'
@@ -368,110 +378,45 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
                                       color: disabledColor,
                                     ),
                                   ),
-                                  SizedBox(
-                                    width: 58,
-                                  ),
-                                  Text(
-                                    'Search News',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 16.sp,
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Text(
+                                      'Search News',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 16.sp,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  // Optional space on right to balance left padding
-                                  // SizedBox(width: 20),
                                 ],
                               ),
                             ),
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        onPressed: () async {
+                          final locationProvider =
+                              context.read<LocationProvider>();
+                          await showLegacyFilters(
+                            context: context,
+                            ref: ref,
+                            locationProvider: locationProvider,
+                            politicians: politicians,
+                          );
+                        },
+                        icon: const Icon(Icons.tune_rounded),
+                        tooltip: 'Open filters',
+                      ),
                     ],
                   ),
                 ),
               ),
 
-              // Topics horizontal list bar below search area
-              Container(
-                height: 60,
-                width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                margin: EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.grey.shade300,
-                      style: BorderStyle.solid,
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-                child: Builder(
-                  builder: (context) {
-                    try {
-                      if (topicsState.refreshError) {
-                        developer.log(
-                            'Topics refresh error: ${topicsState.errorMessage}');
-                        return Center(
-                          child: ErrorBody(message: topicsState.errorMessage),
-                        );
-                      } else if (topicsState.topics == null ||
-                          topicsState.topics!.isEmpty) {
-                        developer.log('Topics list is null or empty');
-                        return ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          shrinkWrap: true,
-                          itemCount: 5,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 8),
-                              child: Shimmer.fromColors(
-                                baseColor: Colors.grey.shade300,
-                                highlightColor: Colors.grey.shade100,
-                                child: Container(
-                                  width: 100,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      } else {
-                        return ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          shrinkWrap: true,
-                          physics: BouncingScrollPhysics(),
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          itemCount: topicsState.topics!.length,
-                          itemBuilder: (context, index) {
-                            final topic = topicsState.topics![index];
-                            return Container(
-                              margin: EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 8),
-                              child: TopicListComponent(
-                                id: topic.id,
-                                name: topic.name,
-                                type: topic.type,
-                              ),
-                            );
-                          },
-                        );
-                      }
-                    } catch (e) {
-                      developer.log('Error in topics builder: $e');
-                      return Center(
-                        child: ErrorBody(message: 'Error loading topics'),
-                      );
-                    }
-                  },
-                ),
-              ),
+              // Adaptive filter surface (topics, location, people)
+              LegacyFilterBar(),
 
               // Posts list expanded to use remaining vertical space
               Expanded(
@@ -482,54 +427,65 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
                       try {
                         // Use reusable PaginatedListView which handles all states
                         return PaginatedListView<PostsModel>(
-                        items: paginationState.posts ?? [],
-                        isLoading: paginationState.posts == null ||
-                            (paginationState.posts!.isEmpty &&
-                                (paginationState.errorMessage?.isEmpty ?? true)),
-                        hasError: paginationState.refreshError,
-                        errorMessage: paginationState.errorMessage,
-                        onLoadMore: _loadMore,
-                        onRefresh: () async {
-                          ref
-                              .refresh(postPaginationControllerProvider.notifier)
-                              .resetPosts();
-                          await ref
-                              .read(postPaginationControllerProvider.notifier)
-                              .getPosts();
-                        },
-                        itemBuilder: (context, index, post) {
-                          return _buildPostItem(
-                            context,
-                            post,
-                            index,
-                            politiciansState,
-                            ref.watch(topic),
-                          );
-                        },
-                        loadingWidget: ListView.separated(
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            return NewsShimmer();
+                          items: paginationState.posts ?? [],
+                          isLoading: paginationState.posts == null ||
+                              (paginationState.posts!.isEmpty &&
+                                  (paginationState.errorMessage?.isEmpty ??
+                                      true)),
+                          hasError: paginationState.refreshError,
+                          errorMessage: paginationState.errorMessage,
+                          onLoadMore: _loadMore,
+                          onRefresh: () async {
+                            AppLogger.logInfo(
+                              'Legacy pull-to-refresh invoked',
+                              tag: 'legacyNewsView',
+                            );
+                            ref
+                                .refresh(legacyPostPaginationControllerProvider
+                                    .notifier)
+                                .resetPosts();
+                            await ref
+                                .read(legacyPostPaginationControllerProvider
+                                    .notifier)
+                                .getPosts();
                           },
-                          separatorBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 8),
-                              child: Divider(
-                                thickness: 2.0,
-                                color: Colors.grey.shade300,
-                              ),
+                          itemBuilder: (context, index, post) {
+                            AppLogger.logInfo(
+                              'Legacy item builder index=$index postId=${post.id}',
+                              tag: 'legacyNewsView',
+                            );
+                            return _buildPostItem(
+                              context,
+                              post,
+                              index,
+                              politiciansState,
+                              ref.watch(topic),
                             );
                           },
-                          itemCount: 4,
-                        ),
-                        errorWidget: ErrorBody(
-                          message: paginationState.errorMessage,
-                          textSize: 16.sp,
-                        ),
-                        shrinkWrap: true,
-                        physics: BouncingScrollPhysics(),
-                      );
+                          loadingWidget: ListView.separated(
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              return NewsShimmer();
+                            },
+                            separatorBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 8),
+                                child: Divider(
+                                  thickness: 2.0,
+                                  color: Colors.grey.shade300,
+                                ),
+                              );
+                            },
+                            itemCount: 4,
+                          ),
+                          errorWidget: ErrorBody(
+                            message: paginationState.errorMessage,
+                            textSize: 16.sp,
+                          ),
+                          shrinkWrap: true,
+                          physics: BouncingScrollPhysics(),
+                        );
                       } catch (e) {
                         developer.log('Error in posts builder: $e');
                         return ErrorBody(
@@ -553,38 +509,6 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
         ),
       );
     }
-  }
-
-  void _showLoginRegisterDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Login required'),
-        content: const Text('Please login or register to access your profile.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SignInScreenV2()),
-              );
-            },
-            child: const Text('Login'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SignUpScreenV2()),
-              );
-            },
-            child: const Text('Register'),
-          ),
-        ],
-      ),
-    );
   }
 
   // Politicians section builder for political topic posts
@@ -708,8 +632,8 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
                           child: InkWell(
                             onTap: () {
                               try {
-                                if (box.containsKey('1') &&
-                                    box.get('1')!.isNotEmpty) {
+                                final userId = ref.read(userIdProvider);
+                                if (userId.isNotEmpty && userId != '0') {
                                   ref
                                       .read(topicsControllerProvider.notifier)
                                       .newTopic(

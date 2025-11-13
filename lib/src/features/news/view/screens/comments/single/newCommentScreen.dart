@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
 
 // import 'package:hashtagable/hashtagable.dart';//Balu
 import '../../../../../../src.dart';
@@ -69,8 +70,12 @@ class _NewCommentScreenState extends ConsumerState<NewCommentScreen> {
                   )
                   .then(
                 (value) {
+                  AppLogger.logInfo(
+                    'Legacy new comment added for post index=${widget.index}',
+                    tag: 'legacyNewsView',
+                  );
                   ref
-                      .read(postPaginationControllerProvider.notifier)
+                      .read(legacyPostPaginationControllerProvider.notifier)
                       .commentsCount(widget.index!);
                   Navigator.pop(context);
                 },
@@ -91,8 +96,12 @@ class _NewCommentScreenState extends ConsumerState<NewCommentScreen> {
                       .read(commentsPaginationControllerProvider.notifier)
                       .commentsCount(widget.commentIndex!);
                   ref
-                      .read(postPaginationControllerProvider.notifier)
+                      .read(legacyPostPaginationControllerProvider.notifier)
                       .commentsCount(widget.index!);
+                  AppLogger.logInfo(
+                    'Legacy reply comment added for post index=${widget.index}',
+                    tag: 'legacyNewsView',
+                  );
                   Navigator.pop(context);
                 },
               );
@@ -111,8 +120,12 @@ class _NewCommentScreenState extends ConsumerState<NewCommentScreen> {
                       .read(commentsPaginationControllerProvider.notifier)
                       .commentsCount(widget.commentIndex!);
                   ref
-                      .read(postPaginationControllerProvider.notifier)
+                      .read(legacyPostPaginationControllerProvider.notifier)
                       .commentsCount(widget.index!);
+                  AppLogger.logInfo(
+                    'Legacy nested reply added for post index=${widget.index}',
+                    tag: 'legacyNewsView',
+                  );
                   Navigator.pop(context);
                 },
               );

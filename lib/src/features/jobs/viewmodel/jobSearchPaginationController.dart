@@ -4,52 +4,46 @@ import '../../../src.dart';
 final jobsSearchPaginationControllerProvider =
     StateNotifierProvider<JobsSearchPaginationController, JobsSearchPagination>(
         (ref) {
-  final getJobService = ref.watch(jobsSearchServiceProvider);
-  final getJobSearch = ref.watch(jobSearchTag);
-  return JobsSearchPaginationController(
-    getJobService,
-    getJobSearch,
-  );
+  final jobsSearchRepository = ref.watch(jobsSearchServiceProvider);
+  final jobSearchQuery = ref.watch(jobSearchTag);
+  return JobsSearchPaginationController(jobsSearchRepository, jobSearchQuery);
 });
 
 class JobsSearchPaginationController
     extends StateNotifier<JobsSearchPagination> {
-  final JobsSearchService _jobsService;
-  final String search;
-
   JobsSearchPaginationController(
-    this._jobsService,
+    this._jobsSearchRepository,
     this.search, [
     JobsSearchPagination? state,
   ]) : super(state ?? JobsSearchPagination.initial()) {
     restJobs();
   }
 
-  // -----Fetch Posts
+  final JobsSearchRepository _jobsSearchRepository;
+  final String search;
+
   Future<void> getJobs(String search) async {
     try {
-      final jobs = await _jobsService.getJobs(
-        state.page!,
-        search,
+      final jobs = await _jobsSearchRepository.getJobs(
+        page: state.page ?? 1,
+        search: search,
       );
       state = state.copyWith(
         jobs: [
-          ...state.jobs!,
+          ...state.jobs ?? const [],
           ...jobs,
         ],
-        page: state.page! + 1,
+        page: (state.page ?? 1) + 1,
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 
-// -------Reset Greetings
   Future<void> restJobs() async {
     state = state.restJobs();
   }
 
-  // ---------Refresh Greetings
   Future<void> refreshJobs() async {
     state = state.refreshJobs();
   }
@@ -59,7 +53,7 @@ class JobsSearchPaginationController
     final requestMoreData = itemPosition % 10 == 0 && itemPosition != 0;
     final pageToRequest = itemPosition ~/ 10;
 
-    if (requestMoreData && pageToRequest + 1 >= state.page!) {
+    if (requestMoreData && pageToRequest + 1 >= (state.page ?? 1)) {
       getJobs(search);
     }
   }

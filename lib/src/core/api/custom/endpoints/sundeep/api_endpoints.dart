@@ -1,17 +1,18 @@
 /// API endpoints and configuration constants
 /// Used by: All feature services
 class ApiEndpoints {
-  /// 🔗 Base URL
+  /// 🔗 Legacy Base URL
   static const String baseUrl = 'https://localguru.in/_api/';
 
   /// 🔗 Base URL v1
   static const String baseUrl2 = 'https://localguru.in/_api_v1/';
 
   /// 📂 Category Base URLs
-  static const String newsUrl = '${baseUrl}news/';
-  static const String jobUrl = '${baseUrl}jobs/';
-  static const String listingsUrl = '${baseUrl}listings/';
-  static const String greetingUrl = '${baseUrl}greetings/';
+  // static const String newsUrl = '${baseUrl}news/';
+  static const String newsUrlV1 = '${baseUrl2}user/';
+  static const String jobUrlV1 = '${baseUrl2}user/';
+  static const String listingsUrlV1 = '${baseUrl2}user/';
+  static const String greetingUrlV1 = '${baseUrl2}user/';
 
   /// 📂 Category Base URLs (v1)
   static const String userApiV1 = '${baseUrl2}user/';
@@ -25,15 +26,9 @@ class ApiEndpoints {
   static const String forgotPasswordV1 = '${userApiV1}forgot_password_api.php';
   static const String resetPasswordV1 = '${userApiV1}reset_password_api.php';
 
-  // Legacy/misc auth endpoints (if still in use elsewhere)
-  static const String phoneAuthApi = '${baseUrl}phoneAuth_api.php';
-  static const String verifyUserApi = '${baseUrl}verifyUser_Api.php';
-  static const String expireOtpApi = '${baseUrl}expireOtp_api.php';
-
   // ============================
   // 👤 User Profile APIs
   // ============================
-  static const String updateProfileApi = '${baseUrl}updateProfile_api.php';
   static const String updateProfileV1 = '${userApiV1}update_profile_api.php';
 
   // ============================
@@ -63,43 +58,48 @@ class ApiEndpoints {
   // ============================
   // 📰 News APIs
   // ============================
-  static const String postApi = '${newsUrl}posts_api.php';
-  static const String postByIdApi = '${newsUrl}postById_api.php';
-  static const String topicsApi = '${newsUrl}topics_api.php';
-  static const String politicianApi = '${newsUrl}politicians_api.php';
-  static const String commentsApi = '${newsUrl}comments_api.php';
-  static const String replyCommentsApi = '${newsUrl}replyComments.php';
+  // static const String postApi = '${newsUrl}posts_api.php';
+  static const String getAllPostsApi = '${newsUrlV1}get_all_posts_api.php';
+  static const String fetchEditorPostsApi =
+      '${newsUrlV1}fetch_editor_posts_api.php';
+  // static const String postByIdApi = '${newsUrl}postById_api.php';
+  static const String postByIdApi = '${newsUrlV1}postById_api.php';
+  // static const String topicsApi = '${newsUrlV1}topics_api.php';
+  static const String topicsApi = '${editorApiV1}topics_api.php';
+  static const String politicianApi = '${newsUrlV1}politicians_api.php';
+  static const String commentsApi = '${newsUrlV1}comments_api.php';
+  static const String replyCommentsApi = '${newsUrlV1}replyComments.php';
   static const String viewCountUpdateApi =
-      '${newsUrl}view_count_update_api.php';
+      '${newsUrlV1}view_count_update_api.php';
   static const String whatsShareCountApi =
-      '${newsUrl}whats_share_count_api.php';
-  static const String likeApi = '${newsUrl}like_api.php';
-  static const String newCommentApi = '${newsUrl}new_comment_api.php';
-  static const String reportApi = '${newsUrl}report_api.php';
+      '${newsUrlV1}whats_share_count_api.php';
+  static const String likeApi = '${newsUrlV1}like_api.php';
+  static const String newCommentApi = '${newsUrlV1}new_comment_api.php';
+  static const String reportApi = '${newsUrlV1}report_api.php';
   static const String updatePoliticianStatusApi =
-      '${newsUrl}update_politician_status_api.php';
+      '${newsUrlV1}update_politician_status_api.php';
 
   // ============================
   // 💼 Jobs APIs
   // ============================
-  static const String jobsApi = '${jobUrl}jobs_posts_api.php';
-  static const String addNewJobApi = '${jobUrl}add_new_job.php';
-  static const String searchJobsApi = '${jobUrl}job_search_api.php';
-  static const String jobNewDataApi = '${jobUrl}job_new_data_api.php';
+  static const String jobsApi = '${jobUrlV1}jobs_posts_api.php';
+  static const String addNewJobApi = '${jobUrlV1}add_new_job.php';
+  static const String searchJobsApi = '${jobUrlV1}job_search_api.php';
+  static const String jobNewDataApi = '${jobUrlV1}job_new_data_api.php';
 
   // ============================
   // 📋 Listings APIs
   // ============================
-  static const String listSearchApi = '${listingsUrl}lists_search_api.php';
-  static const String listPostApi = '${listingsUrl}lists_posts_api.php';
-  static const String listTopicsApi = '${listingsUrl}list_topics_api.php';
+  static const String listSearchApi = '${listingsUrlV1}lists_search_api.php';
+  static const String listPostApi = '${listingsUrlV1}lists_posts_api.php';
+  static const String listTopicsApi = '${listingsUrlV1}list_topics_api.php';
 
   // ============================
   // 🎉 Greetings APIs
   // ============================
-  static const String greetingsApi = '${greetingUrl}greetings_api.php';
+  static const String greetingsApi = '${greetingUrlV1}greetings_api.php';
   static const String greetingsTopicsApi =
-      '${greetingUrl}greetings_topics_api.php';
+      '${greetingUrlV1}greetings_topics_api.php';
 
   // ============================
   // 📦 Requirements APIs

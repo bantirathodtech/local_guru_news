@@ -1,15 +1,16 @@
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
-import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
 import 'package:local_guru_all/src/core/api/shared/config/api_service_config.dart';
-import 'package:local_guru_all/src/features/location/data/model/state_model.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
 import 'package:local_guru_all/src/features/location/data/model/district_model.dart';
 import 'package:local_guru_all/src/features/location/data/model/landmark_model.dart';
+import 'package:local_guru_all/src/features/location/data/model/state_model.dart';
 
 class LocationRepository {
   final ApiService _apiService;
 
   LocationRepository({ApiService? apiService})
-      : _apiService = apiService ?? ApiService(config: ApiServiceConfig.fromEnvironment());
+      : _apiService = apiService ??
+            ApiService(config: ApiServiceConfig.fromEnvironment());
 
   /// Get States API - GET request
   Future<List<StateModel>> getStates() async {
@@ -70,4 +71,3 @@ class LocationRepository {
     return [];
   }
 }
-

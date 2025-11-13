@@ -6,7 +6,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:universal_io/io.dart';
 
-import '../../custom/endpoints/api_endpoints.dart';
+import '../../custom/endpoints/sundeep/api_endpoints.dart';
 import '../config/api_service_config.dart';
 import '../constants/api_constants.dart';
 import '../exception/api_exceptions.dart';
@@ -23,7 +23,7 @@ class ApiService {
       : _config = config,
         _dio = Dio(
           BaseOptions(
-            baseUrl: ApiEndpoints.baseUrl,
+            baseUrl: ApiEndpoints.baseUrl2,
             connectTimeout: ApiConstants.timeout,
             receiveTimeout: ApiConstants.timeout,
             // headers: ApiConstants.jsonHeaders,
@@ -32,7 +32,8 @@ class ApiService {
         ) {
     if (kIsWeb) {
       // ignore: avoid_print
-      print('[ApiService] CORS_PROXY_BASE = ' + (_config.corsProxyBase ?? '(null)'));
+      print('[ApiService] CORS_PROXY_BASE = ' +
+          (_config.corsProxyBase ?? '(null)'));
     }
   }
 
@@ -315,8 +316,9 @@ class ApiService {
     final proxy = _config.corsProxyBase;
     if (proxy == null || proxy.isEmpty) return endpoint;
 
-    final isAbsolute = endpoint.startsWith('http://') || endpoint.startsWith('https://');
-    final absolute = isAbsolute ? endpoint : (ApiEndpoints.baseUrl + endpoint);
+    final isAbsolute =
+        endpoint.startsWith('http://') || endpoint.startsWith('https://');
+    final absolute = isAbsolute ? endpoint : (ApiEndpoints.baseUrl2 + endpoint);
 
     String proxied;
     final hasQueryStyle = proxy.contains('?');

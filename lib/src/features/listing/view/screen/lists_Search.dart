@@ -14,18 +14,16 @@ class ListSearchScreen extends ConsumerStatefulWidget {
 }
 
 class _ListSearchScreenState extends ConsumerState<ListSearchScreen> {
-  _loadMore() {
+  void _loadMore() {
     ref
         .read(listSearchPaginationControllerProvider.notifier)
         .getPosts(_search.text);
   }
 
-  TextEditingController _search = TextEditingController();
+  final TextEditingController _search = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    ref.watch(listSearchPaginationControllerProvider);
-    final listState =
-        ref.watch(listSearchPaginationControllerProvider.notifier).state;
+    final listState = ref.watch(listSearchPaginationControllerProvider);
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Colors.white,
@@ -34,7 +32,9 @@ class _ListSearchScreenState extends ConsumerState<ListSearchScreen> {
               ref
                   .read(listSearchPaginationControllerProvider.notifier)
                   .resetPosts();
-              ref.read(listsPaginationControllerProvider.notifier).resetPosts();
+              ref
+                  .read(listsPaginationControllerProvider.notifier)
+                  .resetPosts();
               ref.read(listsPaginationControllerProvider.notifier).getPosts();
               Navigator.pop(context);
             },
@@ -71,12 +71,13 @@ class _ListSearchScreenState extends ConsumerState<ListSearchScreen> {
             cursorHeight: 20,
             onSubmitted: (v) {
               if (_search.text.isNotEmpty) {
-                ref
-                    .read(listsPaginationControllerProvider.notifier)
-                    .resetPosts();
-                ref
-                    .refresh(listSearchPaginationControllerProvider.notifier)
-                    .getPosts(_search.text);
+                final listingsController =
+                    ref.read(listsPaginationControllerProvider.notifier);
+                final searchController =
+                    ref.read(listSearchPaginationControllerProvider.notifier);
+                listingsController.resetPosts();
+                searchController.resetPosts();
+                searchController.getPosts(_search.text);
                 FocusScope.of(context).unfocus();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(

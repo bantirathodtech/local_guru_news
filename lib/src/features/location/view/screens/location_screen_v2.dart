@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
 import 'package:local_guru_all/src/core/components/button/custom_button.dart';
 import 'package:local_guru_all/src/core/constants/app_colors.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
 import 'package:local_guru_all/src/features/location/viewmodel/location_provider.dart';
 import 'package:provider/provider.dart' hide Consumer;
 import 'package:sizer/sizer.dart';
@@ -34,7 +35,7 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
     return Consumer(
       builder: (context, ref, child) {
         final locationProvider = context.watch<LocationProvider>();
-        ref.watch(postPaginationControllerProvider);
+        ref.watch(legacyPostPaginationControllerProvider);
 
         return Scaffold(
           appBar: const CustomAppBar(
@@ -49,11 +50,15 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                   child: CustomButton(
                     text: 'కొనసాగించండి',
                     onPressed: () {
+                      AppLogger.logInfo(
+                        'Legacy location confirmed. Refreshing posts.',
+                        tag: 'legacyNewsView',
+                      );
                       ref
-                          .read(postPaginationControllerProvider.notifier)
+                          .read(legacyPostPaginationControllerProvider.notifier)
                           .resetPosts();
                       ref
-                          .read(postPaginationControllerProvider.notifier)
+                          .read(legacyPostPaginationControllerProvider.notifier)
                           .getPosts();
                       Navigator.of(context, rootNavigator: true)
                           .pushAndRemoveUntil(

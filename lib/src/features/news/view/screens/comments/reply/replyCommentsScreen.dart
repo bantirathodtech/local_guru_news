@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 // import 'package:hashtagable/hashtagable.dart';  //Balu
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
 import 'package:readmore/readmore.dart';
@@ -37,17 +36,14 @@ class ReplyCommentsScreen extends ConsumerStatefulWidget {
 }
 
 class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
-  Box<String> box = Hive.box('user');
-
-  _loadMore() {
+  void _loadMore() {
     ref.read(replyCommentsPaginationControllerProvider.notifier).getComments();
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(replyCommentsPaginationControllerProvider);
-    final commentsState =
-        ref.watch(replyCommentsPaginationControllerProvider.notifier).state;
+    final commentsState = ref.watch(replyCommentsPaginationControllerProvider);
+    final userId = ref.watch(userIdProvider);
     return Scaffold(
       // appBar: AppBar(
       //   leading: InkWell(
@@ -160,9 +156,11 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                                       actions: [
                                         TextButton(
                                           onPressed: () {
-                                            DatabaseService()
-                                                .report(widget.id.toString(),
-                                                    'comment')
+                                            PostEngagementRepository.instance
+                                                .report(
+                                                    typeId:
+                                                        widget.id.toString(),
+                                                    type: 'comment')
                                                 .then((value) {
                                               Navigator.pop(context);
                                               ScaffoldMessenger.of(context)
@@ -229,8 +227,7 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              if (box.containsKey('id') &&
-                                  box.get('id') != null) {
+                              if (userId.isNotEmpty && userId != '0') {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -386,13 +383,15 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () {
-                                                      DatabaseService()
+                                                      PostEngagementRepository
+                                                          .instance
                                                           .report(
-                                                              commentsState
-                                                                  .comments![
-                                                                      index]
-                                                                  .id!,
-                                                              'comment')
+                                                              typeId:
+                                                                  commentsState
+                                                                      .comments![
+                                                                          index]
+                                                                      .id!,
+                                                              type: 'comment')
                                                           .then((value) {
                                                         Navigator.pop(context);
                                                         ScaffoldMessenger.of(
@@ -460,8 +459,8 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                                           // Like Button
                                           IconButton(
                                             onPressed: () async {
-                                              if (box.containsKey('id') &&
-                                                  box.get('id') != null) {
+                                              if (userId.isNotEmpty &&
+                                                  userId != '0') {
                                                 await ref
                                                     .read(
                                                         replyCommentsPaginationControllerProvider
@@ -537,8 +536,8 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                                           // Dislike Button
                                           IconButton(
                                             onPressed: () async {
-                                              if (box.containsKey('id') &&
-                                                  box.get('id') != null) {
+                                              if (userId.isNotEmpty &&
+                                                  userId != '0') {
                                                 await ref
                                                     .read(
                                                         replyCommentsPaginationControllerProvider
@@ -615,8 +614,8 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          if (box.containsKey('id') &&
-                                              box.get('id') != null) {
+                                          if (userId.isNotEmpty &&
+                                              userId != '0') {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
@@ -628,8 +627,7 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                                                   commentIndex:
                                                       widget.commentIndex!,
                                                   commentType: 'replyreply',
-                                                  replyUserName: box
-                                                              .get('id') ==
+                                                  replyUserName: userId ==
                                                           commentsState
                                                               .comments![index]
                                                               .userId!
@@ -637,7 +635,7 @@ class _ReplyCommentsScreenState extends ConsumerState<ReplyCommentsScreen> {
                                                       : commentsState
                                                           .comments![index]
                                                           .username!,
-                                                  replyUserId: box.get('id') ==
+                                                  replyUserId: userId ==
                                                           commentsState
                                                               .comments![index]
                                                               .userId!

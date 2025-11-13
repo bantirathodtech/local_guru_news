@@ -1,12 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_guru_all/src/features/greetings/data/model/greetingsTopicsModel.dart';
 
 class GreetingsTopicsModelProvider {
   final List<GreetingsTopics>? topics;
   final String? errorMessage;
-
-  Box<String> box = Hive.box('user');
 
   GreetingsTopicsModelProvider({
     this.topics,
@@ -29,7 +26,6 @@ class GreetingsTopicsModelProvider {
     );
   }
 
-  // ------------------Clear Data
   GreetingsTopicsModelProvider resetTopics({
     List<GreetingsTopicsModelProvider>? topics,
     String? errorMessage,

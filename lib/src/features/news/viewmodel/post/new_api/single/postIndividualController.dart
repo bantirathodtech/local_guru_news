@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../src.dart';
+import '../../../../../../src.dart';
 
 final postIndividualControllerProvider =
     StateNotifierProvider<PostIndividualController, PostIndividualModel>((ref) {
@@ -26,8 +26,8 @@ class PostIndividualController extends StateNotifier<PostIndividualModel> {
         posts: post != null ? [post] : [],
         errorMessage: state.errorMessage,
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 

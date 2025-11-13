@@ -1,99 +1,119 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
-import 'package:local_guru_all/src/src.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/core/api/shared/state/app_state.dart';
+import 'package:local_guru_all/src/features/jobs/data/model/jobsModel.dart';
 
-final jobsServiceProvider = Provider<JobsService>((ref) => JobsService(Dio()));
+final jobsServiceProvider = Provider<JobsRepository>((ref) {
+  final apiService = ApiService();
+  final userId = ref.watch(userIdProvider);
+  return JobsRepository(apiService: apiService, userId: userId);
+});
 
-class JobsService {
-  final Dio _dio;
+class JobsRepository {
+  JobsRepository({
+    required ApiService apiService,
+    required String userId,
+  })  : _apiService = apiService,
+        _userId = userId;
 
-  JobsService(
-    this._dio,
-  );
+  final ApiService _apiService;
+  final String _userId;
 
-  Box<String> box = Hive.box('user');
-
-  Future<List<JobsModel>> getJobs([
+  Future<List<JobsModel>> getJobs({
     int page = 1,
     String district = '',
-  ]) async {
+  }) async {
+    final payload = <String, String>{
+      'page': page <= 0 ? '1' : page.toString(),
+    };
+
+    if (district.isNotEmpty) {
+      payload['district'] = district;
+    }
+
     try {
-      var data = FormData.fromMap(
-        {
-          'page': page.toString(),
-          'district': district,
-        },
+      final response = await _apiService.post(
+        ApiEndpoints.jobsApi,
+        payload,
+        forceFormData: true,
+        caller: 'JobsRepository.getJobs',
       );
 
-      final response = await _dio.post(
-        // DatabaseService.jobsApi + '/jobs_posts_api.php',
-        ApiEndpoints.jobsApi,
-        data: data,
-      );
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['result'];
-      List<JobsModel> jobs =
-          results.map((e) => JobsModel.fromJson(e)).toList(growable: false);
-      return jobs;
-    } on DioException catch (error) {
-      throw ErrorExceptionHandler.fromError(error);
+      final decoded = response is String ? json.decode(response) : response;
+      final List<Map<String, dynamic>> normalized = _extractResults(decoded);
+
+      return normalized.map(JobsModel.fromJson).toList(growable: false);
+    } catch (error) {
+      throw Exception('Failed to fetch jobs: $error');
     }
   }
 
-  Future<List<JobsModel>> addJob(
-    String state,
-    String district,
-    String landmark,
-    String category,
-    String tags,
-    String salary,
-    String jobType,
-    String title,
-    String hires,
-    String qualification,
-    String location,
-    String contact,
-    String shortDescription,
-    String description,
-  ) async {
+  Future<List<JobsModel>> addJob({
+    required String state,
+    required String district,
+    required String landmark,
+    required String category,
+    required String tags,
+    required String salary,
+    required String jobType,
+    required String title,
+    required String hires,
+    required String qualification,
+    required String location,
+    required String contact,
+    required String shortDescription,
+    required String description,
+  }) async {
+    final payload = <String, String>{
+      'id': _userId.isNotEmpty ? _userId : '0',
+      'state': state,
+      'district': district,
+      'landmark': landmark,
+      'cat_id': category,
+      'tags': tags,
+      'title': title,
+      'salary': salary,
+      'job_type': jobType,
+      'hires': hires,
+      'qualification': qualification,
+      'location': location,
+      'contact_details': contact,
+      'shortDescription': shortDescription,
+      'description': description,
+    };
+
     try {
-      var data = FormData.fromMap(
-        {
-          'id': box.get('id'),
-          'state': state,
-          'district': district,
-          'landmark': landmark,
-          'cat_id': category,
-          'tags': tags,
-          'title': title,
-          'salary': salary,
-          'job_type': jobType,
-          'hires': hires,
-          'qualification': qualification,
-          'location': location,
-          'contact_details': contact,
-          'shortDescription': shortDescription,
-          'description': description,
-        },
+      final response = await _apiService.post(
+        ApiEndpoints.addNewJobApi,
+        payload,
+        forceFormData: true,
+        caller: 'JobsRepository.addJob',
       );
 
-      final response = await _dio.post(
-        // DatabaseService.jobsApi + '/add_new_job.php',
-        ApiEndpoints.addNewJobApi,
-        data: data,
-      );
-      print(response.data);
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['result'];
-      List<JobsModel> jobs =
-          results.map((e) => JobsModel.fromJson(e)).toList(growable: false);
-      return jobs;
-    } on DioException catch (error) {
-      throw ErrorExceptionHandler.fromError(error);
+      final decoded = response is String ? json.decode(response) : response;
+      final List<Map<String, dynamic>> normalized = _extractResults(decoded);
+
+      return normalized.map(JobsModel.fromJson).toList(growable: false);
+    } catch (error) {
+      throw Exception('Failed to create job: $error');
     }
+  }
+
+  List<Map<String, dynamic>> _extractResults(dynamic decoded) {
+    if (decoded is Map<String, dynamic>) {
+      final result = decoded['result'];
+      if (result is List) {
+        return result.whereType<Map<String, dynamic>>().toList(growable: false);
+      }
+    }
+
+    if (decoded is List) {
+      return decoded.whereType<Map<String, dynamic>>().toList(growable: false);
+    }
+
+    return const [];
   }
 }

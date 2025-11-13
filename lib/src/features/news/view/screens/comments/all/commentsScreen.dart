@@ -2,7 +2,6 @@ import 'package:delayed_display/delayed_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
 import 'package:readmore/readmore.dart';
@@ -26,17 +25,14 @@ class CommentsScreen extends ConsumerStatefulWidget {
 }
 
 class _CommentsScreenState extends ConsumerState<CommentsScreen> {
-  Box<String> box = Hive.box('user');
-
-  _loadMore() {
+  void _loadMore() {
     ref.read(commentsPaginationControllerProvider.notifier).getComments();
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(commentsPaginationControllerProvider);
-    final commentsState =
-        ref.watch(commentsPaginationControllerProvider.notifier).state;
+    final commentsState = ref.watch(commentsPaginationControllerProvider);
+    final userId = ref.watch(userIdProvider);
     return Scaffold(
       appBar: const CustomAppBar(title: 'Comments'),
       // bottomNavigationBar: Container(
@@ -119,7 +115,7 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           onTap: () {
-            if (box.containsKey('id') && box.get('id') != null) {
+            if (userId.isNotEmpty && userId != '0') {
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -300,11 +296,11 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
                                         actions: [
                                           TextButton(
                                             onPressed: () {
-                                              DatabaseService()
+                                              PostEngagementRepository.instance
                                                   .report(
-                                                      commentsState
+                                                      typeId: commentsState
                                                           .comments![index].id!,
-                                                      'comment')
+                                                      type: 'comment')
                                                   .then((value) {
                                                 Navigator.pop(context);
                                                 ScaffoldMessenger.of(context)
@@ -435,8 +431,7 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
                                   // Like Button
                                   IconButton(
                                     onPressed: () async {
-                                      if (box.containsKey('id') &&
-                                          box.get('id') != null) {
+                                      if (userId.isNotEmpty && userId != '0') {
                                         await ref
                                             .read(
                                                 commentsPaginationControllerProvider
@@ -506,8 +501,7 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
                                   // Dislike Button
                                   IconButton(
                                     onPressed: () async {
-                                      if (box.containsKey('id') &&
-                                          box.get('id') != null) {
+                                      if (userId.isNotEmpty && userId != '0') {
                                         await ref
                                             .read(
                                                 commentsPaginationControllerProvider
@@ -579,8 +573,7 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  if (box.containsKey('id') &&
-                                      box.get('id') != null) {
+                                  if (userId.isNotEmpty && userId != '0') {
                                     ref.read(commentId.notifier).state =
                                         commentsState.comments![index].id!;
                                     ref.read(commentPostId.notifier).state =

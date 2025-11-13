@@ -1,14 +1,15 @@
 import 'dart:io';
 
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
-import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
 import 'package:local_guru_all/src/core/api/shared/config/api_service_config.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
 
 class AuthRepository {
   final ApiService _apiService;
 
   AuthRepository({ApiService? apiService})
-      : _apiService = apiService ?? ApiService(config: ApiServiceConfig.fromEnvironment());
+      : _apiService = apiService ??
+            ApiService(config: ApiServiceConfig.fromEnvironment());
 
   // Sign in (email/password/role)
   Future<dynamic> login({

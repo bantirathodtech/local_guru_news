@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
 import 'package:local_guru_all/src/core/constants/app_colors.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
 import 'package:sizer/sizer.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -68,13 +69,18 @@ class _PostViewScreenState extends State<PostViewScreen>
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
-        final paginationState = ref.watch(postPaginationControllerProvider);
+        final paginationState =
+            ref.watch(legacyPostPaginationControllerProvider);
+        AppLogger.logInfo(
+          'Legacy PostViewScreen state posts=${paginationState.posts?.length ?? 0}',
+          tag: 'legacyNewsView',
+        );
 
         // Initialize YouTube controller for YouTube layout
         if (widget.layout == "Youtube" && paginationState.posts != null) {
           final post = paginationState.posts![widget.index!];
           if (post.media != null && post.media!.isNotEmpty) {
-            final mediaUrl = post.media!.first?.toString() ?? '';
+            final mediaUrl = post.media!.first.toString();
             final videoId = YoutubePlayer.convertUrlToId(mediaUrl);
             if (videoId != null && videoId.isNotEmpty) {
               _youtubeController = YoutubePlayerController(

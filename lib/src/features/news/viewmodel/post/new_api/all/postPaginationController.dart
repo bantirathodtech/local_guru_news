@@ -1,28 +1,37 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_guru_all/src/core/log/logging.dart';
 
-import '../../../../../src.dart';
+import '../../../../../../src.dart';
 
 final postPaginationControllerProvider =
     StateNotifierProvider<PostPaginationController, PostsPagination>((ref) {
-  final topicId = ref.watch(topicIdProvider);
-  final topicType = ref.watch(topicTypeProvider);
-  final userId =
-      ref.watch(userIdProvider); // Provided from riverpodService.dart
-  return PostPaginationController(topicId, topicType, userId);
+  final selectedTopicId = ref.watch(topicId);
+  final selectedTopicType = ref.watch(topicType);
+  final userIdValue = ref.watch(userIdProvider);
+  final landmarkIdValue = ref.watch(locationLandmark);
+  final stateIdValue = ref.watch(locationState);
+  final districtIdValue = ref.watch(locationDistrict);
+  return PostPaginationController(
+    selectedTopicId,
+    selectedTopicType,
+    userIdValue,
+    landmarkIdValue,
+    stateIdValue,
+    districtIdValue,
+  );
 });
-
-final topicIdProvider = StateProvider<String>((ref) => '');
-
-final topicTypeProvider = StateProvider<String>((ref) => '');
 
 class PostPaginationController extends StateNotifier<PostsPagination> {
   final String topicId;
   final String topicType;
   final String userId;
+  final String landmarkId;
+  final String stateId;
+  final String districtId;
   bool _isLoading = false;
 
-  PostPaginationController(this.topicId, this.topicType, this.userId)
+  PostPaginationController(this.topicId, this.topicType, this.userId,
+      this.landmarkId, this.stateId, this.districtId)
       : super(PostsPagination.initial()) {
     // Auto-load posts when controller is created
     getPosts();
@@ -31,18 +40,30 @@ class PostPaginationController extends StateNotifier<PostsPagination> {
   Future<void> getPosts() async {
     // Prevent duplicate concurrent calls
     if (_isLoading) {
-      AppLogger.logInfo('getPosts already in progress, skipping duplicate call');
+      AppLogger.logInfo(
+          'getPosts already in progress, skipping duplicate call');
       return;
     }
 
     AppLogger.logInfo(
-        'getPosts called for topicId=$topicId, page=${state.page}, userId=$userId');
+        'getPosts called for topicId=$topicId, page=${state.page}, userId=$userId, stateId=$stateId, districtId=$districtId, landmarkId=$landmarkId');
 
     _isLoading = true;
     try {
       final currentPage = state.page ?? 1;
+      final resolvedLandmarkId = _resolveLocationId(landmarkId);
+      final resolvedStateId = _resolveLocationId(stateId);
+      final resolvedDistrictId = _resolveLocationId(districtId);
       final posts = await PostPaginationService.fetchPosts(
-          topicId, topicType, currentPage, userId);
+        topicId: topicId,
+        topicType: topicType,
+        page: currentPage,
+        userId: userId,
+        landmarkId: resolvedLandmarkId,
+        stateId: resolvedStateId,
+        districtId: resolvedDistrictId,
+        editorId: userId,
+      );
       if (!mounted) {
         _isLoading = false;
         return;
@@ -103,6 +124,13 @@ class PostPaginationController extends StateNotifier<PostsPagination> {
       getPosts();
     }
   }
+}
+
+String _resolveLocationId(String value) {
+  if (value.isEmpty || value.toLowerCase() == 'null') {
+    return '0';
+  }
+  return value;
 }
 
 // import 'package:flutter_riverpod/flutter_riverpod.dart';

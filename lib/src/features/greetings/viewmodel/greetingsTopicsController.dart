@@ -4,40 +4,35 @@ import '../../../src.dart';
 
 final topicsGreetingsControllerProvider = StateNotifierProvider<
     GreetingsTopicsController, GreetingsTopicsModelProvider>((ref) {
-  final getTopicsServiceProvider = ref.read(greetingsTopicsServiceProvider);
-  final getTopicId = ref.read(greetingTopicId.notifier).state;
-  return GreetingsTopicsController(getTopicsServiceProvider, getTopicId);
+  final topicsRepository = ref.watch(greetingsTopicsServiceProvider);
+  return GreetingsTopicsController(topicsRepository);
 });
 
 class GreetingsTopicsController
     extends StateNotifier<GreetingsTopicsModelProvider> {
-  final GreetingsTopicsService _topicsService;
-  final String topicId;
-
   GreetingsTopicsController(
-    this._topicsService,
-    this.topicId, [
+    this._topicsRepository, [
     GreetingsTopicsModelProvider? state,
   ]) : super(state ?? GreetingsTopicsModelProvider.initial()) {
     getTopics();
   }
 
-  // -----Fetch Posts
+  final GreetingsTopicsRepository _topicsRepository;
+
   Future<void> getTopics() async {
     try {
-      final topics = await _topicsService.getGreetings();
+      final topics = await _topicsRepository.getGreetings();
       state = state.copyWith(
         topics: [
-          ...state.topics!,
+          ...state.topics ?? const [],
           ...topics,
         ],
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 
-// Clear Topics
   Future<void> resetTopics() async {
     state = state.resetTopics();
   }

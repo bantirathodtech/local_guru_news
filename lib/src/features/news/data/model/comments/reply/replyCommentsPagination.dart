@@ -1,14 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-
-import '../../../../../../src.dart';
+import 'package:local_guru_all/src/features/news/data/model/comments/all/commentsModel.dart';
+import 'package:local_guru_all/src/features/news/data/repository/post/post_engagement_repository.dart';
 
 class ReplyCommentsPagination {
   final List<ReplyComments>? comments;
   final int? page;
   final String? errorMessage;
-
-  Box<String> box = Hive.box('user');
 
   ReplyCommentsPagination({
     this.comments,
@@ -51,21 +48,33 @@ class ReplyCommentsPagination {
       int id, String type, int like, int index, int replyIndex) {
     // User Liked
     if (like == 1 && comments![index].liked! == '0') {
-      DatabaseService().like(id.toString(), type, '1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       comments![index].liked = '1';
       comments![index].likes =
           (int.parse(comments![index].likes!) + 1).toString();
     }
     // User Already Liked
     else if (like == 1 && comments![index].liked! == '1') {
-      DatabaseService().like(id.toString(), type, '0');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       comments![index].liked = '0';
       comments![index].likes =
           (int.parse(comments![index].likes!) - 1).toString();
     }
     // User Already Disliked Want to Like
     else if (like == 1 && comments![index].liked! == '-1') {
-      DatabaseService().like(id.toString(), type, '1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       comments![index].liked = '1';
       comments![index].likes =
           (int.parse(comments![index].likes!) + 1).toString();
@@ -75,21 +84,33 @@ class ReplyCommentsPagination {
 
     // User Disliked
     else if (like == -1 && comments![index].liked == '0') {
-      DatabaseService().like(id.toString(), type, '-1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       comments![index].liked = '-1';
       comments![index].dislikes =
           (int.parse(comments![index].dislikes!) + 1).toString();
     }
     // User Already Disliked
     else if (like == -1 && comments![index].liked == '-1') {
-      DatabaseService().like(id.toString(), type, '0');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       comments![index].liked = '0';
       comments![index].dislikes =
           (int.parse(comments![index].dislikes!) - 1).toString();
     }
     // User Already Liked Want to DisLike
     else if (like == -1 && comments![index].liked == '1') {
-      DatabaseService().like(id.toString(), type, '-1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       comments![index].liked = '-1';
       comments![index].dislikes =
           (int.parse(comments![index].dislikes!) + 1).toString();

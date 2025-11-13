@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../src.dart';
-
+import 'package:local_guru_all/src/core/api/shared/state/app_state.dart';
+import 'package:local_guru_all/src/features/news/data/model/topics/topicsModel.dart';
+import 'package:local_guru_all/src/features/news/data/model/topics/topics_Model.dart';
+import 'package:local_guru_all/src/features/news/data/repository/topics/topicsService.dart';
 final topicsControllerProvider =
     StateNotifierProvider<TopicsController, TopicsModelProvider>((ref) {
   final getTopicsServiceProvider = ref.read(topicsServiceProvider);
@@ -31,8 +32,8 @@ class TopicsController extends StateNotifier<TopicsModelProvider> {
           ...topics,
         ],
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
     }
   }
 
@@ -71,8 +72,8 @@ class TopicsController extends StateNotifier<TopicsModelProvider> {
           ],
         );
       }
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
     }
   }
 }

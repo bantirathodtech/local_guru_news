@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 import 'package:local_guru_all/src/src.dart';
 import 'package:sizer/sizer.dart';
@@ -13,22 +12,18 @@ class JobsDashboard extends ConsumerStatefulWidget {
 }
 
 class _JobsDashboardState extends ConsumerState<JobsDashboard> {
-  _loadMore() {
+  void _loadMore() {
     ref.read(jobsPaginationControllerProvider.notifier).getJobs();
   }
 
-  Box<String> box = Hive.box('user');
-
   @override
   Widget build(BuildContext context) {
-    ref.watch(jobsPaginationControllerProvider); //!Jobs
-
-    final jobsState =
-        ref.watch(jobsPaginationControllerProvider.notifier).state; //!Jobs
+    final jobsState = ref.watch(jobsPaginationControllerProvider);
+    final userId = ref.watch(userIdProvider);
 
     return SafeArea(
       child: Scaffold(
-        floatingActionButton: (box.containsKey('id') && box.get('id') != null)
+        floatingActionButton: userId != '0'
             ? Container(
                 decoration: BoxDecoration(
                   color: Colors.red,

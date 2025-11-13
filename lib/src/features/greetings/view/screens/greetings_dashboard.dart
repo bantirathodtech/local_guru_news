@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
 import 'package:local_guru_all/src/core/constants/app_colors.dart';
@@ -19,22 +18,17 @@ class GreetingsDashboard extends ConsumerStatefulWidget {
 }
 
 class _GreetingsDashboardState extends ConsumerState<GreetingsDashboard> {
-  _loadMore() {
+  void _loadMore() {
     ref.read(greetingsPaginationControllerProvider.notifier).getGreetings();
   }
 
   ScreenshotController screenshotController = ScreenshotController();
-  Box<String> box = Hive.box('user');
   bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(topicsGreetingsControllerProvider);
-    final topicsState =
-        ref.watch(topicsGreetingsControllerProvider.notifier).state;
-    ref.watch(greetingsPaginationControllerProvider);
-    final greetingsState =
-        ref.watch(greetingsPaginationControllerProvider.notifier).state;
+    final topicsState = ref.watch(topicsGreetingsControllerProvider);
+    final greetingsState = ref.watch(greetingsPaginationControllerProvider);
 
     return SafeArea(
       child: Scaffold(

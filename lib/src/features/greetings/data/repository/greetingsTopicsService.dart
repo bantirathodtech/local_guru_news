@@ -1,41 +1,63 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
-import 'package:local_guru_all/src/src.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/core/api/shared/state/app_state.dart';
+import 'package:local_guru_all/src/features/greetings/data/model/greetingsTopicsModel.dart';
 
 final greetingsTopicsServiceProvider =
-    Provider<GreetingsTopicsService>((ref) => GreetingsTopicsService(Dio()));
+    Provider<GreetingsTopicsRepository>((ref) {
+  final apiService = ApiService();
+  final userId = ref.watch(userIdProvider);
+  return GreetingsTopicsRepository(apiService: apiService, userId: userId);
+});
 
-class GreetingsTopicsService {
-  final Dio _dio;
+class GreetingsTopicsRepository {
+  GreetingsTopicsRepository({
+    required ApiService apiService,
+    required String userId,
+  })  : _apiService = apiService,
+        _userId = userId;
 
-  GreetingsTopicsService(
-    this._dio,
-  );
+  final ApiService _apiService;
+  final String _userId;
 
   Future<List<GreetingsTopics>> getGreetings() async {
+    final requestBody = <String, String>{
+      'userId': _userId.isNotEmpty ? _userId : '0',
+    };
+
     try {
-      var data = FormData.fromMap(
-        {
-          'userId': box.containsKey('id') ? box.get('id') : '0',
-        },
+      final response = await _apiService.post(
+        ApiEndpoints.greetingsTopicsApi,
+        requestBody,
+        forceFormData: true,
+        caller: 'GreetingsTopicsRepository.getGreetings',
       );
 
-      final response = await _dio.post(
-        // DatabaseService.greetingsApi + '/greetings_topics_api.php',
-        ApiEndpoints.greetingsTopicsApi,
-        data: data,
+      final decoded = response is String ? json.decode(response) : response;
+      if (decoded is Map<String, dynamic>) {
+        final results = decoded['result'];
+        if (results is List) {
+          return results
+              .whereType<Map<String, dynamic>>()
+              .map(GreetingsTopics.fromJson)
+              .toList(growable: false);
+        }
+      } else if (decoded is List) {
+        return decoded
+            .whereType<Map<String, dynamic>>()
+            .map(GreetingsTopics.fromJson)
+            .toList(growable: false);
+      }
+
+      return const [];
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(
+        Exception('Failed to fetch greeting topics: $error'),
+        stackTrace,
       );
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['result'];
-      List<GreetingsTopics> greetingsTopics = results
-          .map((e) => GreetingsTopics.fromJson(e))
-          .toList(growable: false);
-      return greetingsTopics;
-    } on DioException catch (error) {
-      throw ErrorExceptionHandler.fromError(error);
     }
   }
 }

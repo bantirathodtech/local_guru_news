@@ -4,45 +4,46 @@ import '../../../src.dart';
 
 final listsPaginationControllerProvider =
     StateNotifierProvider<ListPaginationController, ListsPostPagination>((ref) {
-  final listPostService = ref.watch(listServiceProvider);
-  final getTopicID = ref.watch(listTopicId);
-  return ListPaginationController(listPostService, getTopicID);
+  final listRepository = ref.watch(listServiceProvider);
+  final topicId = ref.watch(listTopicId);
+  return ListPaginationController(listRepository, topicId);
 });
 
 class ListPaginationController extends StateNotifier<ListsPostPagination> {
-  final ListService _postService;
-  final String _topicId;
-
   ListPaginationController(
-    this._postService,
+    this._listsRepository,
     this._topicId, [
     ListsPostPagination? state,
   ]) : super(state ?? ListsPostPagination.initial()) {
     getPosts();
   }
 
-  // -----Fetch Posts
+  final ListsRepository _listsRepository;
+  final String _topicId;
+
   Future<void> getPosts() async {
     try {
-      final posts = await _postService.getPosts(state.page!, _topicId);
+      final posts = await _listsRepository.getPosts(
+        page: state.page ?? 1,
+        topicId: _topicId,
+      );
+
       state = state.copyWith(
         posts: [
-          ...state.posts!,
+          ...state.posts ?? const [],
           ...posts,
         ],
-        page: state.page! + 1,
+        page: (state.page ?? 1) + 1,
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 
-// -------Reset Posts
   Future<void> resetPosts() async {
     state = state.clearPosts();
   }
 
-  // ---------Refresh Posts
   Future<void> refreshPost(String postId, int index) async {
     state = state.refreshPost(postId, index);
   }
@@ -52,7 +53,7 @@ class ListPaginationController extends StateNotifier<ListsPostPagination> {
     final requestMoreData = itemPosition % 10 == 0 && itemPosition != 0;
     final pageToRequest = itemPosition ~/ 10;
 
-    if (requestMoreData && pageToRequest + 1 >= state.page!) {
+    if (requestMoreData && pageToRequest + 1 >= (state.page ?? 1)) {
       getPosts();
     }
   }

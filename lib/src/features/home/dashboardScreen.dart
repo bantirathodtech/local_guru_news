@@ -55,7 +55,7 @@ class _DashBoardScreenState extends ConsumerState<DashBoardScreen> {
         developer.log('Received initial message: type=$type, id=$id');
         if (type == "post" && id != null) {
           try {
-            DatabaseService.updateViewCount(id);
+            PostEngagementRepository.instance.incrementView(id);
             ref.read(deepLinkPostId.notifier).state = int.parse(id);
             await ref
                 .refresh(postIndividualControllerProvider.notifier)
@@ -77,7 +77,7 @@ class _DashBoardScreenState extends ConsumerState<DashBoardScreen> {
     // ForeGround Notification
     FirebaseMessaging.onMessage.listen((message) {
       developer.log('Received foreground message: ${message.data}');
-      NotificationService.display(message);
+      developer.log('Foreground notification: ${message.notification?.title}');
     });
 
     // BackGround state
@@ -88,7 +88,7 @@ class _DashBoardScreenState extends ConsumerState<DashBoardScreen> {
         final id = message.data['id'];
         if (type == "post" && id != null) {
           try {
-            DatabaseService.updateViewCount(id);
+            PostEngagementRepository.instance.incrementView(id);
             ref.read(deepLinkPostId.notifier).state = int.parse(id);
             await ref
                 .refresh(postIndividualControllerProvider.notifier)
@@ -120,7 +120,7 @@ class _DashBoardScreenState extends ConsumerState<DashBoardScreen> {
         developer.log('Received dynamic link with id: $id');
         if (id.isNotEmpty) {
           try {
-            DatabaseService.updateViewCount(id);
+            PostEngagementRepository.instance.incrementView(id);
             ref.read(deepLinkPostId.notifier).state = int.parse(id);
             await ref
                 .refresh(postIndividualControllerProvider.notifier)
@@ -147,7 +147,7 @@ class _DashBoardScreenState extends ConsumerState<DashBoardScreen> {
           developer.log('Received dynamic link (onLink): $id');
           if (id.isNotEmpty) {
             try {
-              DatabaseService.updateViewCount(id);
+              PostEngagementRepository.instance.incrementView(id);
               ref.read(deepLinkPostId.notifier).state = int.parse(id);
               ref
                   .refresh(postIndividualControllerProvider.notifier)

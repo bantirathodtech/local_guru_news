@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
 import 'package:local_guru_all/src/core/constants/app_colors.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../../../src.dart';
@@ -22,9 +23,7 @@ class SearchScreen extends StatelessWidget {
       ),
       body: Consumer(
         builder: (context, ref, child) {
-          ref.watch(topicsControllerProvider);
-          final topicsState =
-              ref.watch(topicsControllerProvider.notifier).state;
+          final topicsState = ref.watch(topicsControllerProvider);
           return Container(
             child: Builder(
               builder: (context) {
@@ -61,9 +60,13 @@ class SearchScreen extends StatelessWidget {
                               topicsState.topics![index].name!;
                           ref.read(topicType.notifier).state =
                               topicsState.topics![index].type!;
+                          AppLogger.logInfo(
+                            'Legacy search topic selected id=${topicsState.topics![index].id}',
+                            tag: 'legacyNewsView',
+                          );
                           ref
-                              .refresh(
-                                  postPaginationControllerProvider.notifier)
+                              .refresh(legacyPostPaginationControllerProvider
+                                  .notifier)
                               .resetPosts();
                           Navigator.pop(context);
                         },

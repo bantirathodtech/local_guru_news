@@ -13,20 +13,20 @@ class JobSearchScreen extends ConsumerStatefulWidget {
 }
 
 class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
-  _loadMore() {
-    ref
-        .refresh(jobsSearchPaginationControllerProvider.notifier)
-        .getJobs(_search.text);
+  void _loadMore() {
+    final controller =
+        ref.read(jobsSearchPaginationControllerProvider.notifier);
+    final query = _search.text.isNotEmpty
+        ? _search.text
+        : ref.read(jobSearchTag);
+    controller.getJobs(query);
   }
 
-  TextEditingController _search = TextEditingController();
+  final TextEditingController _search = TextEditingController();
   @override
   Widget build(BuildContext context) {
     final searchTag = ref.watch(jobSearchTag);
-    ref.watch(jobsSearchPaginationControllerProvider); //!Jobs
-    final jobsState = ref
-        .watch(jobsSearchPaginationControllerProvider.notifier)
-        .state; //!Jobs
+    final jobsState = ref.watch(jobsSearchPaginationControllerProvider);
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Colors.white,
@@ -72,12 +72,10 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
             onSubmitted: (v) {
               if (_search.text.isNotEmpty) {
                 ref.read(jobSearchTag.notifier).state = _search.text;
-                ref
-                    .read(jobsSearchPaginationControllerProvider.notifier)
-                    .restJobs();
-                ref
-                    .read(jobsSearchPaginationControllerProvider.notifier)
-                    .getJobs(_search.text);
+                final controller =
+                    ref.read(jobsSearchPaginationControllerProvider.notifier);
+                controller.restJobs();
+                controller.getJobs(_search.text);
                 FocusScope.of(context).unfocus();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -111,10 +109,10 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
                   onEndOfPage: _loadMore,
                   child: RefreshIndicator(
                     onRefresh: () {
-                      return ref
-                          .refresh(
-                              jobsSearchPaginationControllerProvider.notifier)
-                          .getJobs(searchTag);
+                      final controller =
+                          ref.read(jobsSearchPaginationControllerProvider.notifier);
+                      controller.restJobs();
+                      return controller.getJobs(searchTag);
                     },
                     child: ListView.builder(
                       itemCount: jobsState.jobs!.length,

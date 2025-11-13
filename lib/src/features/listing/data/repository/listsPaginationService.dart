@@ -1,50 +1,79 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive/hive.dart';
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/core/api/shared/state/app_state.dart';
+import 'package:local_guru_all/src/features/listing/data/model/listsModel.dart';
 
-import '../../../../src.dart';
-
-final listServiceProvider = Provider<ListService>((ref) {
-  return ListService(Dio());
+final listServiceProvider = Provider<ListsRepository>((ref) {
+  final apiService = ApiService();
+  final userId = ref.watch(userIdProvider);
+  final landmark = ref.watch(locationLandmark);
+  return ListsRepository(
+    apiService: apiService,
+    userId: userId,
+    landmark: landmark,
+  );
 });
 
-class ListService {
-  final Dio _dio;
+class ListsRepository {
+  ListsRepository({
+    required ApiService apiService,
+    required String userId,
+    required String landmark,
+  })  : _apiService = apiService,
+        _userId = userId,
+        _landmark = landmark;
 
-  ListService(
-    this._dio,
-  );
+  final ApiService _apiService;
+  final String _userId;
+  final String _landmark;
 
-  Box<String> box = Hive.box('user');
-
-  Future<List<ListsPosts>> getPosts([
+  Future<List<ListsPosts>> getPosts({
     int page = 1,
     String topicId = '0',
-  ]) async {
-    try {
-      var data = FormData.fromMap(
-        {
-          // 'userId': box.containsKey('id') ? box.get('id') : '0',
-          'page': page.toString(),
-          'topicid': topicId,
-          'landmark': box.get('landmark')!,
-        },
-      );
-      final response = await _dio.post(
-        // DatabaseService.listingsApi + '/lists_posts_api.php',
-        ApiEndpoints.listPostApi,
-        data: data,
-      );
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['result'];
-      List<ListsPosts> posts =
-          results.map((e) => ListsPosts.fromJson(e)).toList(growable: false);
-      return posts;
-    } on DioException catch (error) {
-      throw ErrorExceptionHandler.fromError(error);
+  }) async {
+    final payload = <String, String>{
+      'userId': _userId.isNotEmpty ? _userId : '0',
+      'page': page <= 0 ? '1' : page.toString(),
+      'topicid': topicId.isNotEmpty ? topicId : '0',
+    };
+
+    final landmark = _landmark.trim();
+    if (landmark.isNotEmpty) {
+      payload['landmark'] = landmark;
     }
+
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.listPostApi,
+        payload,
+        forceFormData: true,
+        caller: 'ListsRepository.getPosts',
+      );
+
+      final decoded = response is String ? json.decode(response) : response;
+      final List<Map<String, dynamic>> normalized = _extractResults(decoded);
+
+      return normalized.map(ListsPosts.fromJson).toList(growable: false);
+    } catch (error) {
+      throw Exception('Failed to fetch listing posts: $error');
+    }
+  }
+
+  List<Map<String, dynamic>> _extractResults(dynamic decoded) {
+    if (decoded is Map<String, dynamic>) {
+      final result = decoded['result'];
+      if (result is List) {
+        return result.whereType<Map<String, dynamic>>().toList(growable: false);
+      }
+    }
+
+    if (decoded is List) {
+      return decoded.whereType<Map<String, dynamic>>().toList(growable: false);
+    }
+
+    return const [];
   }
 }

@@ -31,7 +31,6 @@ class ListsDetails extends StatefulWidget {
 }
 
 class _ListsDetailsState extends State<ListsDetails> {
-  int _current = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,12 +82,7 @@ class _ListsDetailsState extends State<ListsDetails> {
                       autoPlayInterval: Duration(seconds: 5),
                       autoPlayCurve: Curves.ease,
                       scrollDirection: Axis.horizontal,
-                      disableCenter: false,
-                      onPageChanged: (index, reason) {
-                        setState(() {
-                          _current = index;
-                        });
-                      }),
+                      disableCenter: false),
                 ),
                 SizedBox(
                   height: 10,

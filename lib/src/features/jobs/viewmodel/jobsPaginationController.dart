@@ -4,91 +4,90 @@ import '../../../src.dart';
 
 final jobsPaginationControllerProvider =
     StateNotifierProvider<JobsPaginationController, JobsPagination>((ref) {
-  final getJobService = ref.watch(jobsServiceProvider);
-  final getDistrict = ref.watch(locationDistrict);
-  return JobsPaginationController(getJobService, getDistrict);
+  final jobsRepository = ref.watch(jobsServiceProvider);
+  final district = ref.watch(locationDistrict);
+  return JobsPaginationController(jobsRepository, district);
 });
 
 class JobsPaginationController extends StateNotifier<JobsPagination> {
-  final JobsService _jobsService;
-  final String _district;
-
   JobsPaginationController(
-    this._jobsService,
+    this._jobsRepository,
     this._district, [
     JobsPagination? state,
   ]) : super(state ?? JobsPagination.initial()) {
     getJobs();
   }
 
-  // -----Fetch Posts
+  final JobsRepository _jobsRepository;
+  final String _district;
+
   Future<void> getJobs() async {
     try {
-      final jobs = await _jobsService.getJobs(state.page!, _district);
+      final jobs = await _jobsRepository.getJobs(
+        page: state.page ?? 1,
+        district: _district,
+      );
+
       state = state.copyWith(
         jobs: [
-          ...state.jobs!,
+          ...state.jobs ?? const [],
           ...jobs,
         ],
-        page: state.page! + 1,
+        page: (state.page ?? 1) + 1,
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 
-  // New Job
-  Future<void> addnewJob(
-    String stateId,
-    String district,
-    String landmark,
-    String category,
-    String tags,
-    String salary,
-    String jobType,
-    String title,
-    String hires,
-    String qualification,
-    String location,
-    String contact,
-    String shortDescription,
-    String description,
-  ) async {
+  Future<void> addNewJob({
+    required String stateId,
+    required String district,
+    required String landmark,
+    required String category,
+    required String tags,
+    required String salary,
+    required String jobType,
+    required String title,
+    required String hires,
+    required String qualification,
+    required String location,
+    required String contact,
+    required String shortDescription,
+    required String description,
+  }) async {
     try {
-      final jobs = await _jobsService.addJob(
-        stateId,
-        district,
-        landmark,
-        category,
-        tags,
-        salary,
-        jobType,
-        title,
-        hires,
-        qualification,
-        location,
-        contact,
-        shortDescription,
-        description,
+      final jobs = await _jobsRepository.addJob(
+        state: stateId,
+        district: district,
+        landmark: landmark,
+        category: category,
+        tags: tags,
+        salary: salary,
+        jobType: jobType,
+        title: title,
+        hires: hires,
+        qualification: qualification,
+        location: location,
+        contact: contact,
+        shortDescription: shortDescription,
+        description: description,
       );
       state = state.copyWith(
         jobs: [
           ...jobs,
-          ...state.jobs!,
+          ...state.jobs ?? const [],
         ],
-        page: state.page!,
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 
-// -------Reset Greetings
   Future<void> restJobs() async {
     state = state.restJobs();
   }
 
-  // ---------Refresh Greetings
   Future<void> refreshJobs() async {
     state = state.refreshJobs();
   }
@@ -98,7 +97,7 @@ class JobsPaginationController extends StateNotifier<JobsPagination> {
     final requestMoreData = itemPosition % 10 == 0 && itemPosition != 0;
     final pageToRequest = itemPosition ~/ 10;
 
-    if (requestMoreData && pageToRequest + 1 >= state.page!) {
+    if (requestMoreData && pageToRequest + 1 >= (state.page ?? 1)) {
       getJobs();
     }
   }

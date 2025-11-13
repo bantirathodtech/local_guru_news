@@ -1,26 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:local_guru_all/src/src.dart';
+import 'package:local_guru_all/src/features/news/data/model/comments/all/commentsModel.dart';
+import 'package:local_guru_all/src/features/news/data/model/comments/reply/replyCommentsPagination.dart';
+import 'package:local_guru_all/src/features/news/data/repository/comments/reply/replyCommentsPaginationService.dart';
+import 'package:local_guru_all/src/features/news/data/repository/post/post_engagement_repository.dart';
 
 final commentId = StateProvider<String>((ref) => '0');
 final commentPostId = StateProvider<String>((ref) => '0');
 
 final replyCommentsPaginationControllerProvider = StateNotifierProvider<
     ReplyCommentsPaginationController, ReplyCommentsPagination>((ref) {
-  final getCommentId = ref.watch(commentId);
-  final getPostid = ref.watch(commentPostId);
-  final replyCommentServiceProvider = ref.read(replyCommentsServiceProvider);
+  final commentIdentifier = ref.watch(commentId);
+  final postIdentifier = ref.watch(commentPostId);
+  final replyCommentsRepository = ref.read(replyCommentsServiceProvider);
   return ReplyCommentsPaginationController(
-      replyCommentServiceProvider, getCommentId, getPostid);
+    replyCommentsRepository,
+    commentIdentifier,
+    postIdentifier,
+  );
 });
 
 class ReplyCommentsPaginationController
     extends StateNotifier<ReplyCommentsPagination> {
-  final ReplyCommentsService _commentsService;
-  final String _commentId;
-  final String _postId;
-
   ReplyCommentsPaginationController(
-    this._commentsService,
+    this._commentsRepository,
     this._commentId,
     this._postId, [
     ReplyCommentsPagination? state,
@@ -28,20 +30,26 @@ class ReplyCommentsPaginationController
     getComments();
   }
 
-  // -----Fetch Posts
+  final ReplyCommentsRepository _commentsRepository;
+  final String _commentId;
+  final String _postId;
+
   Future<void> getComments() async {
     try {
-      final comments =
-          await _commentsService.getComments(state.page!, _commentId, _postId);
+      final comments = await _commentsRepository.getComments(
+        page: state.page ?? 1,
+        replyId: _commentId,
+        postId: _postId,
+      );
       state = state.copyWith(
         comments: [
-          ...state.comments!,
+          ...state.comments ?? const [],
           ...comments,
         ],
-        page: state.page! + 1,
+        page: (state.page ?? 1) + 1,
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
     }
   }
 
@@ -52,11 +60,11 @@ class ReplyCommentsPaginationController
     String message,
   ) async {
     try {
-      final comments = await DatabaseService().newComment(
-        _postId,
-        replyId,
-        userReplyId,
-        message,
+      final comments = await PostEngagementRepository.instance.addComment(
+        postId: _postId,
+        message: message,
+        replyId: replyId,
+        replyUserId: userReplyId,
       );
       state = state.replyComment(comments: [
         ...state.comments!,
@@ -72,8 +80,8 @@ class ReplyCommentsPaginationController
           replyId: comments.first.replyId,
         )
       ]);
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
     }
   }
 

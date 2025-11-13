@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_guru_all/src/core/constants/app_colors.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
 import 'package:sizer/sizer.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -88,9 +89,17 @@ class RelatedNewsCard extends ConsumerWidget {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: relatedPosts.length > maxItems ? maxItems : relatedPosts.length,
+          itemCount:
+              relatedPosts.length > maxItems ? maxItems : relatedPosts.length,
           itemBuilder: (context, index) => Padding(
-            padding: EdgeInsets.only(bottom: index < (relatedPosts.length > maxItems ? maxItems : relatedPosts.length) - 1 ? 16 : 0),
+            padding: EdgeInsets.only(
+                bottom: index <
+                        (relatedPosts.length > maxItems
+                                ? maxItems
+                                : relatedPosts.length) -
+                            1
+                    ? 16
+                    : 0),
             child: RelatedNewsItem(
               post: relatedPosts[index],
               allPosts: allPosts,
@@ -146,9 +155,13 @@ class RelatedNewsItem extends ConsumerWidget {
           onTap: () async {
             try {
               if (postIndex != -1 && post.id != null) {
+                AppLogger.logInfo(
+                  'Legacy related post tapped id=${post.id}',
+                  tag: 'legacyNewsView',
+                );
                 // Update post views
                 await ref
-                    .read(postPaginationControllerProvider.notifier)
+                    .read(legacyPostPaginationControllerProvider.notifier)
                     .postViews(
                       post.id!,
                       post.views ?? '0',
@@ -172,8 +185,10 @@ class RelatedNewsItem extends ConsumerWidget {
                   ),
                 );
               }
-            } catch (e) {
+            } catch (e, stackTrace) {
               developer.log('Error navigating to related post: $e');
+              AppLogger.logError('Legacy related post navigation failed: $e',
+                  tag: 'legacyNewsView', stackTrace: stackTrace);
             }
           },
           borderRadius: BorderRadius.circular(16),
@@ -210,7 +225,8 @@ class RelatedNewsItem extends ConsumerWidget {
                         children: [
                           // Views
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.lightGrey.withOpacity(0.6),
                               borderRadius: BorderRadius.circular(8),
@@ -238,7 +254,8 @@ class RelatedNewsItem extends ConsumerWidget {
                           Spacer(),
                           // Time
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.lightGrey.withOpacity(0.6),
                               borderRadius: BorderRadius.circular(8),
@@ -253,9 +270,10 @@ class RelatedNewsItem extends ConsumerWidget {
                                 ),
                                 SizedBox(width: 6),
                                 Text(
-                                  post.readableTime ?? 
+                                  post.readableTime ??
                                       (post.time != null
-                                          ? TimeAgo.displayTimeAgoFromTimestamp(post.time!)
+                                          ? TimeAgo.displayTimeAgoFromTimestamp(
+                                              post.time!)
                                           : ''),
                                   style: TextStyle(
                                     color: AppColors.textSecondary,
@@ -295,9 +313,9 @@ class RelatedNewsItem extends ConsumerWidget {
   }
 
   Widget _buildThumbnail(PostsModel post) {
-    final hasVideo = post.layout?.toLowerCase() == 'video' || 
-                     post.layout?.toLowerCase() == 'youtube';
-    
+    final hasVideo = post.layout?.toLowerCase() == 'video' ||
+        post.layout?.toLowerCase() == 'youtube';
+
     return Container(
       width: 100,
       height: 100,
@@ -373,7 +391,7 @@ class RelatedNewsItem extends ConsumerWidget {
 
     if (post.layout!.toLowerCase() == 'video') {
       final videoUrl = (post.media != null && post.media!.isNotEmpty)
-          ? post.media!.first?.toString() ?? ''
+          ? post.media!.first.toString()
           : '';
       if (videoUrl.isEmpty) {
         return _buildFallbackThumbnail();
@@ -391,7 +409,7 @@ class RelatedNewsItem extends ConsumerWidget {
       );
     } else if (post.layout!.toLowerCase() == 'youtube') {
       final mediaUrl = (post.media != null && post.media!.isNotEmpty)
-          ? post.media!.first?.toString() ?? ''
+          ? post.media!.first.toString()
           : '';
       if (mediaUrl.isEmpty) {
         return _buildFallbackThumbnail();
@@ -410,7 +428,7 @@ class RelatedNewsItem extends ConsumerWidget {
     } else {
       // Image layout
       final imageUrl = (post.media != null && post.media!.isNotEmpty)
-          ? post.media!.first?.toString() ?? ''
+          ? post.media!.first.toString()
           : '';
       if (imageUrl.isEmpty || !_isValidImageUrl(imageUrl)) {
         return _buildFallbackThumbnail();
@@ -446,12 +464,11 @@ class RelatedNewsItem extends ConsumerWidget {
     if (url.startsWith('file:///')) return false;
     try {
       final uri = Uri.parse(url);
-      return uri.isAbsolute && 
-             (uri.scheme == 'http' || uri.scheme == 'https') &&
-             uri.host.isNotEmpty;
+      return uri.isAbsolute &&
+          (uri.scheme == 'http' || uri.scheme == 'https') &&
+          uri.host.isNotEmpty;
     } catch (e) {
       return false;
     }
   }
 }
-

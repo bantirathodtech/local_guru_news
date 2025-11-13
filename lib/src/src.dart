@@ -6,13 +6,8 @@ export 'core/components/drawer/custom_drawer.dart'; // Custom Drawer Component
 export 'core/components/errorBody.dart'; // Error Body
 export 'core/components/hexColorComponent.dart'; // Hex Color Component
 export 'core/components/paginated_list/paginated_list_view.dart'; // Reusable Paginated List View
-export 'core/components/paginated_list/rss_cache_manager.dart'; // RSS Cache Manager
-export 'core/services//exception/errorException.dart'; // Error Exception Service
-//todo =======>[Services]<=======
-export 'core/services/api/databaseService.dart'; // Database Service
-export 'core/services/firebase/firebaseServices.dart'; // Firebase Service
-export 'core/services/notifications/notificationService.dart'; // Notification Service
-export 'core/services/riverpod/riverpodService.dart'; // Riverpod Service|Statemanagement Service
+export 'features/news/rss/cache/rss_cache_manager.dart'; // RSS Cache Manager
+export 'core/api/shared/state/app_state.dart'; // Global Riverpod providers
 //todo =======>[Utils]<=======
 export 'core/utils/assets.dart'; //Assets
 export 'core/utils/colors.dart'; //Colors
@@ -118,7 +113,16 @@ export 'features/listing/view/widgets/listsTopicComponent.dart';
 //todo =======>[Controllers]<=======
 export 'features/listing/viewmodel/listsPostPaginationController.dart';
 export 'features/listing/viewmodel/listsSearchPaginationController.dart';
-//! ________________________[End Greetings]______________________
+//! ________________________[End Listings]______________________
+
+//! ________________________[Requirements]______________________
+//todo =======>[Models]<=======
+export 'features/requirement/data/model/requirementsModel.dart'; // Requirements Model
+//todo =======>[Repositories]<=======
+export 'features/requirement/data/repository/requirements_repository.dart'; // Requirements Repository
+//todo =======>[Views]<=======
+export 'features/requirement/view/screen/requirementsScreen.dart'; // Requirements Screen
+//! ________________________[End Requirements]______________________
 
 //! ________________________[App]_______________
 
@@ -141,9 +145,11 @@ export 'features/news/data/model/topics/topics_Model.dart'; // Topics
 export 'features/news/data/repository/comments/all/commentsPaginationService.dart'; // Comments Service
 export 'features/news/data/repository/comments/reply/replyCommentsPaginationService.dart'; // Reply Comments Service
 export 'features/news/data/repository/politician/politiciansServices.dart'; // Politicans
+export 'features/news/data/repository/post/post_engagement_repository.dart'; // Post Engagement Repository
 //todo =======>[Services]<=======
-export 'features/news/data/repository/post/all/postPaginationService.dart'; // Posts Service
-export 'features/news/data/repository/post/individual/postIndividualService.dart'; // Single Post Service
+export 'features/news/data/repository/post/new_api/all/postPaginationService.dart'; // Posts Service
+export 'features/news/data/repository/post/new_api/individual/postIndividualService.dart'; // Single Post Service
+export 'features/news/data/repository/post/old_api/all/postPaginationService.dart'; // Legacy Posts Service
 export 'features/news/data/repository/topics/topicsService.dart'; // Topics
 export 'features/news/view/screens/comments/all/commentsScreen.dart'; //Comments
 export 'features/news/view/screens/comments/reply/replyCommentsScreen.dart'; //Reply Comments
@@ -166,6 +172,8 @@ export 'features/news/viewmodel/comments/all/commentsPaginationController.dart';
 export 'features/news/viewmodel/comments/reply/replyCommentsPaginationController.dart'; // Reply Comments
 export 'features/news/viewmodel/politician/politiciansControllers.dart'; // Politicians
 //todo =======>[Controllers]<=======
-export 'features/news/viewmodel/post/all/postPaginationController.dart'; // Posts
-export 'features/news/viewmodel/post/single/postIndividualController.dart'; // Single Post
+export 'features/news/viewmodel/post/new_api/all/postPaginationController.dart'; // Posts
+export 'features/news/viewmodel/post/new_api/single/postIndividualController.dart'; // Single Post
+export 'features/news/viewmodel/post/old_api/all/legacy_news_filters.dart'; // Legacy Filter Providers
+export 'features/news/viewmodel/post/old_api/all/postPaginationController.dart'; // Legacy Posts
 export 'features/news/viewmodel/topics/topicsController.dart'; // Topics

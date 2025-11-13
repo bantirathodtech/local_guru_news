@@ -1,52 +1,68 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive/hive.dart';
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/core/api/shared/state/app_state.dart';
+import 'package:local_guru_all/src/features/news/data/model/comments/all/commentsModel.dart';
 
-import '../../../../../../src.dart';
-
-final replyCommentsServiceProvider = Provider<ReplyCommentsService>((ref) {
-  return ReplyCommentsService(Dio());
+final replyCommentsServiceProvider = Provider<ReplyCommentsRepository>((ref) {
+  final apiService = ApiService();
+  final userId = ref.watch(userIdProvider);
+  return ReplyCommentsRepository(apiService: apiService, userId: userId);
 });
 
-class ReplyCommentsService {
-  final Dio _dio;
+class ReplyCommentsRepository {
+  ReplyCommentsRepository({
+    required ApiService apiService,
+    required String userId,
+  })  : _apiService = apiService,
+        _userId = userId;
 
-  ReplyCommentsService(
-    this._dio,
-  );
+  final ApiService _apiService;
+  final String _userId;
 
-  Box<String> box = Hive.box('user');
-
-  Future<List<ReplyComments>> getComments([
+  Future<List<ReplyComments>> getComments({
     int page = 1,
-    String replyId = '0',
-    String postId = '0',
-  ]) async {
+    required String replyId,
+    required String postId,
+  }) async {
+    final payload = <String, String>{
+      'userId': _userId.isNotEmpty ? _userId : '0',
+      'postId': postId,
+      'replyId': replyId,
+      'page': page <= 0 ? '1' : page.toString(),
+    };
+
     try {
-      var data = FormData.fromMap(
-        {
-          'userId': box.containsKey('id') ? box.get('id') : '0',
-          'postId': postId,
-          'replyId': replyId,
-          'page': page.toString(),
-        },
+      final response = await _apiService.post(
+        ApiEndpoints.replyCommentsApi,
+        payload,
+        forceFormData: true,
+        caller: 'ReplyCommentsRepository.getComments',
       );
 
-      final response = await _dio.post(
-        // DatabaseService.newsApi + '/replyComments.php',
-        ApiEndpoints.replyCommentsApi,
-        data: data,
-      );
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['result'];
-      List<ReplyComments> posts =
-          results.map((e) => ReplyComments.fromJson(e)).toList(growable: false);
-      return posts;
-    } on DioException catch (error) {
-      throw ErrorExceptionHandler.fromError(error);
+      final decoded = response is String ? json.decode(response) : response;
+      return _extractResults(decoded)
+          .map(ReplyComments.fromJson)
+          .toList(growable: false);
+    } catch (error) {
+      throw Exception('Failed to fetch reply comments: $error');
     }
+  }
+
+  List<Map<String, dynamic>> _extractResults(dynamic decoded) {
+    if (decoded is Map<String, dynamic>) {
+      final result = decoded['result'];
+      if (result is List) {
+        return result.whereType<Map<String, dynamic>>().toList(growable: false);
+      }
+    }
+
+    if (decoded is List) {
+      return decoded.whereType<Map<String, dynamic>>().toList(growable: false);
+    }
+
+    return const [];
   }
 }

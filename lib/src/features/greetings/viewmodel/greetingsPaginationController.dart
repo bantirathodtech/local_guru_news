@@ -5,46 +5,49 @@ import '../../../src.dart';
 final greetingsPaginationControllerProvider =
     StateNotifierProvider<GreetingsPaginationController, GreetingsPagination>(
         (ref) {
-  final getGreetingsService = ref.watch(greetingsServiceProvider);
-  final getTopicId = ref.watch(greetingTopicId);
-  return GreetingsPaginationController(getGreetingsService, getTopicId);
+  final greetingsRepository = ref.watch(greetingsServiceProvider);
+  final topicId = ref.watch(greetingTopicId);
+  return GreetingsPaginationController(
+    greetingsRepository,
+    topicId,
+  );
 });
 
 class GreetingsPaginationController extends StateNotifier<GreetingsPagination> {
-  final GreetingsService _greetingsService;
-  final String topicId;
-
   GreetingsPaginationController(
-    this._greetingsService,
-    this.topicId, [
+    this._greetingsRepository,
+    this._topicId, [
     GreetingsPagination? state,
   ]) : super(state ?? GreetingsPagination.initial()) {
     getGreetings();
   }
 
-  // -----Fetch Posts
+  final GreetingsRepository _greetingsRepository;
+  final String _topicId;
+
   Future<void> getGreetings() async {
     try {
-      final greetings =
-          await _greetingsService.getGreetings(state.page!, topicId);
+      final greetings = await _greetingsRepository.getGreetings(
+        page: state.page ?? 1,
+        topicId: _topicId,
+      );
+
       state = state.copyWith(
         greetings: [
-          ...state.greetings!,
+          ...state.greetings ?? const [],
           ...greetings,
         ],
-        page: state.page! + 1,
+        page: (state.page ?? 1) + 1,
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (error) {
+      state = state.copyWith(errorMessage: error.toString());
     }
   }
 
-// -------Reset Greetings
   Future<void> resetGreetings() async {
     state = state.clearGreetings();
   }
 
-  // ---------Refresh Greetings
   Future<void> refreshGreetings() async {
     state = state.refreshGreetings();
   }
@@ -54,7 +57,7 @@ class GreetingsPaginationController extends StateNotifier<GreetingsPagination> {
     final requestMoreData = itemPosition % 10 == 0 && itemPosition != 0;
     final pageToRequest = itemPosition ~/ 10;
 
-    if (requestMoreData && pageToRequest + 1 >= state.page!) {
+    if (requestMoreData && pageToRequest + 1 >= (state.page ?? 1)) {
       getGreetings();
     }
   }

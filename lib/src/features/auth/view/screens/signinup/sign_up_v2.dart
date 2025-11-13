@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../viewmodel/auth_provider.dart';
 import 'package:local_guru_all/src/src.dart';
-import '../signin/sign_in_v2.dart';
 
 class SignUpScreenV2 extends StatefulWidget {
   const SignUpScreenV2({Key? key}) : super(key: key);

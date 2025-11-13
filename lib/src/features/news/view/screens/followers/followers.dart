@@ -16,9 +16,8 @@ class _FollowersState extends State<Followers> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
-        ref.watch(politiciansControllerProvider); //!Politicians
-        final politiciansState =
-            ref.watch(politiciansControllerProvider.notifier).state; //!Posts
+        final politiciansState = ref.watch(politiciansControllerProvider);
+        final userId = ref.watch(userIdProvider);
         return SafeArea(
           child: Scaffold(
             // appBar: AppBar(
@@ -57,8 +56,7 @@ class _FollowersState extends State<Followers> {
                         if (e.status == '1') {
                           return InkWell(
                             onTap: () {
-                              if (box.containsKey('id') &&
-                                  box.get('id')!.isNotEmpty) {
+                              if (userId.isNotEmpty && userId != '0') {
                                 ref
                                     .read(topicsControllerProvider.notifier)
                                     .newTopic(
@@ -122,8 +120,7 @@ class _FollowersState extends State<Followers> {
                         if (e.status == '0') {
                           return InkWell(
                             onTap: () {
-                              if (box.containsKey('id') &&
-                                  box.get('id')!.isNotEmpty) {
+                              if (userId.isNotEmpty && userId != '0') {
                                 ref
                                     .read(topicsControllerProvider.notifier)
                                     .newTopic(

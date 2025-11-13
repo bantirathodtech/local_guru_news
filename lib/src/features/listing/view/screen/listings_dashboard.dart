@@ -24,9 +24,7 @@ class _ListsDashboardState extends ConsumerState<ListsDashboard> {
   Widget build(BuildContext context) {
     AsyncValue<List<ListsTopics>> topics = ref.watch(fetchListTopics); //Topics
 
-    ref.watch(listsPaginationControllerProvider); //!Posts
-    final listState =
-        ref.watch(listsPaginationControllerProvider.notifier).state; //!Posts
+    final listState = ref.watch(listsPaginationControllerProvider);
     return SafeArea(
       child: Scaffold(
         body: Container(

@@ -1,49 +1,59 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
-import 'package:local_guru_all/src/src.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/features/jobs/data/model/jobSearchModel.dart';
 
-final jobsSearchServiceProvider = Provider<JobsSearchService>((ref) {
-  return JobsSearchService(Dio());
+final jobsSearchServiceProvider = Provider<JobsSearchRepository>((ref) {
+  final apiService = ApiService();
+  return JobsSearchRepository(apiService: apiService);
 });
 
-class JobsSearchService {
-  final Dio _dio;
+class JobsSearchRepository {
+  JobsSearchRepository({required ApiService apiService})
+      : _apiService = apiService;
 
-  JobsSearchService(
-    this._dio,
-  );
+  final ApiService _apiService;
 
-  Box<String> box = Hive.box('user');
+  Future<List<JobsSearchModel>> getJobs({
+    required int page,
+    required String search,
+  }) async {
+    final payload = <String, String>{
+      'page': page <= 0 ? '1' : page.toString(),
+      'search': search,
+    };
 
-  Future<List<JobsSearchModel>> getJobs(
-    int page,
-    String search,
-  ) async {
     try {
-      var data = FormData.fromMap(
-        {
-          'page': page.toString(),
-          'search': search,
-        },
+      final response = await _apiService.post(
+        ApiEndpoints.searchJobsApi,
+        payload,
+        forceFormData: true,
+        caller: 'JobsSearchRepository.getJobs',
       );
 
-      final response = await _dio.post(
-        // DatabaseService.jobsApi + '/job_search_api.php',
-        ApiEndpoints.searchJobsApi,
-        data: data,
-      );
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['result'];
-      List<JobsSearchModel> jobs = results
-          .map((e) => JobsSearchModel.fromJson(e))
-          .toList(growable: false);
-      return jobs;
-    } on DioException catch (error) {
-      throw ErrorExceptionHandler.fromError(error);
+      final decoded = response is String ? json.decode(response) : response;
+      final List<Map<String, dynamic>> normalized = _extractResults(decoded);
+
+      return normalized.map(JobsSearchModel.fromJson).toList(growable: false);
+    } catch (error) {
+      throw Exception('Failed to search jobs: $error');
     }
+  }
+
+  List<Map<String, dynamic>> _extractResults(dynamic decoded) {
+    if (decoded is Map<String, dynamic>) {
+      final result = decoded['result'];
+      if (result is List) {
+        return result.whereType<Map<String, dynamic>>().toList(growable: false);
+      }
+    }
+
+    if (decoded is List) {
+      return decoded.whereType<Map<String, dynamic>>().toList(growable: false);
+    }
+
+    return const [];
   }
 }

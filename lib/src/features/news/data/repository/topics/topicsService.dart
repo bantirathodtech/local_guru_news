@@ -1,46 +1,58 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
-import 'package:local_guru_all/src/core/api/custom/endpoints/api_endpoints.dart';
-
-import '../../../../../src.dart';
+import 'package:local_guru_all/src/core/api/custom/endpoints/sundeep/api_endpoints.dart';
+import 'package:local_guru_all/src/core/api/shared/service/api_service.dart';
+import 'package:local_guru_all/src/features/news/data/model/topics/topics_Model.dart';
 
 final topicsServiceProvider = Provider<TopicsService>((ref) {
-  return TopicsService(Dio());
+  return TopicsService();
 });
 
 class TopicsService {
-  final Dio _dio;
+  TopicsService({ApiService? apiService, Box<String>? userBox})
+      : _apiService = apiService ?? ApiService(),
+        _userBox = userBox ?? Hive.box<String>('user');
 
-  TopicsService(
-    this._dio,
-  );
-
-  Box<String> box = Hive.box('user');
+  final ApiService _apiService;
+  final Box<String> _userBox;
 
   Future<List<TopicsModel>> getTopics(String topicId) async {
-    try {
-      var data = FormData.fromMap(
-        {
-          'userId': box.containsKey('id') ? box.get('id') : '0',
-          'topicId': box.get('landmark')!,
-        },
-      );
+    final response = await _apiService.post(
+      ApiEndpoints.topicsApi,
+      {
+        'userId': _userBox.get('id', defaultValue: '0') ?? '0',
+        'topicId': topicId,
+      },
+      forceFormData: true,
+      caller: 'TopicsService.getTopics',
+    );
 
-      final response = await _dio.post(
-        // DatabaseService.newsApi + '/topics_api.php',
-        ApiEndpoints.topicsApi,
-        data: data,
-      );
-      Map<String, dynamic> result = json.decode(response.data);
-      List<dynamic> results = result['result'];
-      List<TopicsModel> topics =
-          results.map((e) => TopicsModel.fromJson(e)).toList(growable: false);
-      return topics;
-    } on DioException catch (error) {
-      throw ErrorExceptionHandler.fromError(error);
+    if (response is String) {
+      final decoded = jsonDecode(response);
+      return _mapTopics(decoded);
     }
+
+    return _mapTopics(response);
+  }
+
+  List<TopicsModel> _mapTopics(dynamic response) {
+    if (response is List) {
+      return response
+          .whereType<Map<String, dynamic>>()
+          .map(TopicsModel.fromJson)
+          .toList();
+    }
+    if (response is Map<String, dynamic>) {
+      final result = response['result'];
+      if (result is List) {
+        return result
+            .whereType<Map<String, dynamic>>()
+            .map(TopicsModel.fromJson)
+            .toList();
+      }
+    }
+    return const [];
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hive/hive.dart';
 import 'package:local_guru_all/src/core/constants/app_colors.dart';
+import 'package:local_guru_all/src/core/log/logging.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../../src.dart';
@@ -152,12 +153,16 @@ class _SocialBannerState extends ConsumerState<SocialBanner>
                 activeColor: Color(0xFF25D366), // WhatsApp Green
                 inactiveColor: Color(0xFF757575),
                 onTap: () async {
+                  AppLogger.logInfo(
+                    'Legacy WhatsApp share tapped id=$id',
+                    tag: 'legacyNewsView',
+                  );
                   widget.single!
                       ? await ref
                           .read(postIndividualControllerProvider.notifier)
                           .whatsShare(id, whatsCount, widget.index!)
                       : await ref
-                          .read(postPaginationControllerProvider.notifier)
+                          .read(legacyPostPaginationControllerProvider.notifier)
                           .whatsShare(id, whatsCount, widget.index!);
                 },
               ),
@@ -485,8 +490,12 @@ class _SocialBannerState extends ConsumerState<SocialBanner>
             .read(postIndividualControllerProvider.notifier)
             .likes(int.parse(widget.id!), 'post', value, widget.index!);
       } else {
+        AppLogger.logInfo(
+          'Legacy like/dislike action value=$value post=${widget.id}',
+          tag: 'legacyNewsView',
+        );
         await ref
-            .read(postPaginationControllerProvider.notifier)
+            .read(legacyPostPaginationControllerProvider.notifier)
             .likes(int.parse(widget.id!), 'post', value, widget.index!);
       }
     } else {

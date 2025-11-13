@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../src.dart';
+import 'package:local_guru_all/src/features/news/data/model/politician/politiciansModel.dart';
+import 'package:local_guru_all/src/features/news/data/repository/politician/politiciansServices.dart';
+import 'package:local_guru_all/src/features/news/data/repository/post/post_engagement_repository.dart';
 
 final politiciansControllerProvider =
     StateNotifierProvider<PoliticiansController, PoliticiansModelProvider>(
@@ -29,8 +30,8 @@ class PoliticiansController extends StateNotifier<PoliticiansModelProvider> {
           ...politicians,
         ],
       );
-    } on ErrorExceptionHandler catch (e) {
-      state = state.copyWith(errorMessage: e.message);
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
     }
   }
 
@@ -52,6 +53,6 @@ class PoliticiansController extends StateNotifier<PoliticiansModelProvider> {
       state.politicians![index].status = '0';
       state = state.updateStatus();
     }
-    DatabaseService().updatePoliticianStatus(id);
+    await PostEngagementRepository.instance.updatePoliticianStatus(id);
   }
 }

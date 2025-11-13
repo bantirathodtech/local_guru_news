@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../../../../src.dart';
+import 'package:local_guru_all/src/features/news/data/model/posts/all/posts_Model.dart';
+import 'package:local_guru_all/src/features/news/data/repository/post/post_engagement_repository.dart';
 
 class PostsPagination {
   final List<PostsModel>? posts;
@@ -57,7 +58,7 @@ class PostsPagination {
   //  ----------update views Count
   PostsPagination postViews(String id, String views, int index) {
     if (posts != null && index >= 0 && index < posts!.length) {
-      DatabaseService.updateViewCount(id);
+      PostEngagementRepository.instance.incrementView(id);
       posts![index].views = (int.parse(views) + 1).toString();
     }
     return PostsPagination(
@@ -70,21 +71,23 @@ class PostsPagination {
   // -----------Update Likes Count
   PostsPagination likes(int id, String type, int like, int index) {
     if (posts != null && index >= 0 && index < posts!.length) {
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       // User Liked
       if (like == 1 && posts![index].liked == '0') {
-        DatabaseService().like(id.toString(), type, '1');
         posts![index].liked = '1';
         posts![index].likes = (int.parse(posts![index].likes!) + 1).toString();
       }
       // User Already Liked
       else if (like == 1 && posts![index].liked == '1') {
-        DatabaseService().like(id.toString(), type, '0');
         posts![index].liked = '0';
         posts![index].likes = (int.parse(posts![index].likes!) - 1).toString();
       }
       // User Already Disliked Want to Like
       else if (like == 1 && posts![index].liked == '-1') {
-        DatabaseService().like(id.toString(), type, '1');
         posts![index].liked = '1';
         posts![index].likes = (int.parse(posts![index].likes!) + 1).toString();
         posts![index].dislikes =
@@ -93,21 +96,18 @@ class PostsPagination {
 
       // User Disliked
       else if (like == -1 && posts![index].liked == '0') {
-        DatabaseService().like(id.toString(), type, '-1');
         posts![index].liked = '-1';
         posts![index].dislikes =
             (int.parse(posts![index].dislikes!) + 1).toString();
       }
       // User Already Disliked
       else if (like == -1 && posts![index].liked == '-1') {
-        DatabaseService().like(id.toString(), type, '0');
         posts![index].liked = '0';
         posts![index].dislikes =
             (int.parse(posts![index].dislikes!) - 1).toString();
       }
       // User Already Liked Want to DisLike
       else if (like == -1 && posts![index].liked == '1') {
-        DatabaseService().like(id.toString(), type, '-1');
         posts![index].liked = '-1';
         posts![index].dislikes =
             (int.parse(posts![index].dislikes!) + 1).toString();
@@ -129,7 +129,7 @@ class PostsPagination {
         index >= 0 &&
         index < posts!.length) {
       // Ensure the post at index is non-null before accessing it.
-      DatabaseService.updateShareCount(id);
+      PostEngagementRepository.instance.incrementShare(id);
       posts![index].whatsApp = (int.parse(share) + 1).toString();
     } else {
       // Handle the case where posts is null or the index is out of bounds.

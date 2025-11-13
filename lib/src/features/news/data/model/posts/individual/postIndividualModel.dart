@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-
-import '../../../../../../src.dart';
+import 'package:local_guru_all/src/features/news/data/model/posts/postModelById.dart';
+import 'package:local_guru_all/src/features/news/data/repository/post/post_engagement_repository.dart';
 
 class PostIndividualModel {
   final List<PostsModelByID>? posts;
@@ -43,7 +43,7 @@ class PostIndividualModel {
 
   //  ----------update views Count
   PostIndividualModel postViews(String id, String views, int index) {
-    DatabaseService.updateViewCount(id);
+    PostEngagementRepository.instance.incrementView(id);
     posts![0].views = (int.parse(views) + 1).toString();
     return PostIndividualModel(
       posts: posts,
@@ -55,19 +55,31 @@ class PostIndividualModel {
   PostIndividualModel likes(int id, String type, int like, int index) {
     // User Liked
     if (like == 1 && posts![0].liked == '0') {
-      DatabaseService().like(id.toString(), type, '1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       posts![0].liked = '1';
       posts![0].likes = (int.parse(posts![0].likes!) + 1).toString();
     }
     // User Already Liked
     else if (like == 1 && posts![0].liked == '1') {
-      DatabaseService().like(id.toString(), type, '0');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       posts![0].liked = '0';
       posts![0].likes = (int.parse(posts![0].likes!) - 1).toString();
     }
     // User Already Disliked Want to Like
     else if (like == 1 && posts![0].liked == '-1') {
-      DatabaseService().like(id.toString(), type, '1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       posts![0].liked = '1';
       posts![0].likes = (int.parse(posts![0].likes!) + 1).toString();
       posts![0].dislikes = (int.parse(posts![0].dislikes!) - 1).toString();
@@ -75,19 +87,31 @@ class PostIndividualModel {
 
     // User Disliked
     else if (like == -1 && posts![0].liked == '0') {
-      DatabaseService().like(id.toString(), type, '-1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       posts![0].liked = '-1';
       posts![0].dislikes = (int.parse(posts![0].dislikes!) + 1).toString();
     }
     // User Already Disliked
     else if (like == -1 && posts![0].liked == '-1') {
-      DatabaseService().like(id.toString(), type, '0');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       posts![0].liked = '0';
       posts![0].dislikes = (int.parse(posts![0].dislikes!) - 1).toString();
     }
     // User Already Liked Want to DisLike
     else if (like == -1 && posts![0].liked == '1') {
-      DatabaseService().like(id.toString(), type, '-1');
+      PostEngagementRepository.instance.react(
+        typeId: id.toString(),
+        type: type,
+        like: like,
+      );
       posts![0].liked = '-1';
       posts![0].dislikes = (int.parse(posts![0].dislikes!) + 1).toString();
       posts![0].likes = (int.parse(posts![0].likes!) - 1).toString();
@@ -100,7 +124,7 @@ class PostIndividualModel {
 
   // -------------- update Whats Share count
   PostIndividualModel whatsShare(String id, String share, int index) {
-    DatabaseService.updateShareCount(id);
+    PostEngagementRepository.instance.incrementShare(id);
     posts![0].whatsApp = (int.parse(share) + 1).toString();
     return PostIndividualModel(
       posts: posts,
