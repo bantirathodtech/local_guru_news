@@ -25,11 +25,13 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
   final TextEditingController _search = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final searchTag = ref.watch(jobSearchTag);
     final jobsState = ref.watch(jobsSearchPaginationControllerProvider);
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? Colors.grey.shade900 : Colors.white,
           leading: IconButton(
             onPressed: () {
               ref
@@ -40,7 +42,7 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
             },
             icon: Icon(
               Icons.chevron_left_rounded,
-              color: Colors.black,
+              color: isDark ? Colors.white : Colors.black,
             ),
           ),
           title: TextField(
@@ -56,7 +58,9 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
                 ),
               ),
               hintText: "Search",
-              hintStyle: TextStyle(color: Colors.grey[800]),
+              hintStyle: TextStyle(
+                color: isDark ? Colors.grey.shade400 : Colors.grey[800],
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(50)),
                 gapPadding: 10.0,
@@ -64,7 +68,7 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
               ),
               contentPadding: EdgeInsets.all(10),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: isDark ? Colors.grey.shade800 : Colors.white,
             ),
             controller: _search,
             textInputAction: TextInputAction.search,

@@ -23,26 +23,55 @@ class NewsFeedCard extends StatelessWidget {
     return layout.contains('video') || layout.contains('youtube');
   }
 
-  String get _timeAgo =>
-      TimeAgo.displayTimeAgoFromTimestamp(post.time ?? post.readableTime);
+  String get _formattedDate {
+    if (post.readableTime != null && post.readableTime!.isNotEmpty) {
+      return post.readableTime!;
+    }
+    if (post.time != null && post.time!.isNotEmpty) {
+      return TimeAgo.displayTimeAgoFromTimestamp(post.time!);
+    }
+    return '';
+  }
 
-  String get _views => _formatCount(post.views);
+  String get _views => post.views ?? '0';
 
-  String get _comments => _formatCount(post.comments);
+  String get _likes => post.likes ?? '0';
 
-  String get _topic => post.topic ?? 'General';
+  String _formatCount(String count) {
+    final parsed = int.tryParse(count) ?? 0;
+    if (parsed >= 1000000) {
+      return '${(parsed / 1000000).toStringAsFixed(1)}M';
+    } else if (parsed >= 1000) {
+      return '${(parsed / 1000).toStringAsFixed(1)}K';
+    }
+    return parsed.toString();
+  }
+
+  String? get _topic {
+    final topic = post.topic;
+    // Return null if topic is null, empty, or "General" to hide the chip
+    if (topic == null || topic.isEmpty || topic.toLowerCase() == 'general') {
+      return null;
+    }
+    return topic;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+    return RepaintBoundary(
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
+        side: BorderSide(
+          color: isDark ? Colors.white : Colors.black,
+          width: 1,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -80,33 +109,123 @@ class NewsFeedCard extends StatelessWidget {
                     Text(
                       post.description!,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey.shade700,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade700,
                         height: 1.4,
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                   const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                  // Views and Date Row
+                  Row(
                     children: [
-                      _MetaChip(
-                        icon: Icons.schedule_rounded,
-                        label: _timeAgo,
-                      ),
-                      if (_views.isNotEmpty)
-                        _MetaChip(
-                          icon: Icons.visibility_rounded,
-                          label: '$_views views',
+                      if (_likes.isNotEmpty && _likes != '0')
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.thumb_up_alt_outlined,
+                              size: 16,
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${_formatCount(_likes)} likes',
+                              style:
+                                  Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: theme.brightness == Brightness.dark
+                                            ? Colors.grey.shade400
+                                            : Colors.grey.shade600,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                            ),
+                          ],
                         ),
-                      if (_comments.isNotEmpty)
-                        _MetaChip(
-                          icon: Icons.mode_comment_outlined,
-                          label: '$_comments comments',
+                      if (_likes.isNotEmpty &&
+                          _likes != '0' &&
+                          _views.isNotEmpty &&
+                          _views != '0')
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade500
+                                  : Colors.grey.shade400,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                         ),
-                      _TopicChip(topic: _topic),
+                      if (_views.isNotEmpty && _views != '0')
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.visibility_rounded,
+                              size: 16,
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '$_views views',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: theme.brightness == Brightness.dark
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      if (_views.isNotEmpty && _views != '0' && _formattedDate.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade500
+                                  : Colors.grey.shade400,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      if (_formattedDate.isNotEmpty)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 16,
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _formattedDate,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: theme.brightness == Brightness.dark
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      if (_topic != null) ...[
+                        const Spacer(),
+                        _TopicChip(topic: _topic!),
+                      ],
                     ],
                   ),
                 ],
@@ -120,20 +239,10 @@ class NewsFeedCard extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 
-  String _formatCount(String? raw) {
-    if (raw == null || raw.isEmpty) return '';
-    final value = int.tryParse(raw.replaceAll(',', ''));
-    if (value == null) return raw;
-    if (value >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)}M';
-    } else if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(1)}K';
-    }
-    return value.toString();
-  }
 }
 
 class _MediaPreview extends StatelessWidget {
@@ -199,6 +308,7 @@ class _ChannelRow extends StatelessWidget {
 
     return Row(
       children: [
+        // Left side: Channel image and name
         CircleAvatar(
           radius: 18,
           backgroundColor: AppColors.primary.withOpacity(0.12),
@@ -240,41 +350,6 @@ class _ChannelRow extends StatelessWidget {
   }
 }
 
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: Colors.grey.shade700),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _TopicChip extends StatelessWidget {
   const _TopicChip({required this.topic});
 
@@ -282,13 +357,27 @@ class _TopicChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Chip(
       label: Text(topic),
-      avatar: const Icon(Icons.local_offer_outlined, size: 16),
-      backgroundColor: AppColors.primary.withOpacity(0.08),
-      side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
+      avatar: Icon(
+        Icons.local_offer_outlined,
+        size: 16,
+        color: isDark ? primary : AppColors.primary,
+      ),
+      backgroundColor: isDark
+          ? primary.withOpacity(0.15)
+          : AppColors.primary.withOpacity(0.08),
+      side: BorderSide(
+        color: isDark
+            ? primary.withOpacity(0.4)
+            : AppColors.primary.withOpacity(0.2),
+      ),
       labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.primary,
+            color: isDark ? primary : AppColors.primary,
             fontWeight: FontWeight.w600,
           ),
     );

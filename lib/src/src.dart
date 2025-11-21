@@ -6,8 +6,18 @@ export 'core/components/drawer/custom_drawer.dart'; // Custom Drawer Component
 export 'core/components/errorBody.dart'; // Error Body
 export 'core/components/hexColorComponent.dart'; // Hex Color Component
 export 'core/components/paginated_list/paginated_list_view.dart'; // Reusable Paginated List View
+export 'core/components/empty_state.dart'; // Empty State Component
+export 'core/components/loading_overlay.dart'; // Loading Overlay Component
+export 'core/components/improved_shimmer.dart'; // Improved Shimmer Loading
+export 'core/components/animations/fade_in_widget.dart'; // Animation Widgets
+export 'core/components/error_widget_improved.dart'; // Improved Error Widget
+export 'core/components/improved_button.dart'; // Improved Button Component
 export 'features/news/rss/cache/rss_cache_manager.dart'; // RSS Cache Manager
 export 'core/api/shared/state/app_state.dart'; // Global Riverpod providers
+//todo =======>[Theme]<=======
+export 'core/theme/app_theme.dart'; // App Theme Configuration
+export 'core/theme/app_spacing.dart'; // Spacing System
+export 'core/providers/theme_provider.dart'; // Theme Mode Provider
 //todo =======>[Utils]<=======
 export 'core/utils/assets.dart'; //Assets
 export 'core/utils/colors.dart'; //Colors
@@ -140,17 +150,17 @@ export 'features/news/data/model/posts/all/postsPaginationModel.dart'; // Posts
 export 'features/news/data/model/posts/all/posts_Model.dart'; // Posts
 export 'features/news/data/model/posts/individual/postIndividualModel.dart'; // Single Post
 export 'features/news/data/model/posts/postModelById.dart'; // Single Post
-export 'features/news/data/model/topics/topicsModel.dart'; // Topics
 export 'features/news/data/model/topics/topics_Model.dart'; // Topics
 export 'features/news/data/repository/comments/all/commentsPaginationService.dart'; // Comments Service
 export 'features/news/data/repository/comments/reply/replyCommentsPaginationService.dart'; // Reply Comments Service
 export 'features/news/data/repository/politician/politiciansServices.dart'; // Politicans
 export 'features/news/data/repository/post/post_engagement_repository.dart'; // Post Engagement Repository
+export 'features/news/data/repository/post/new_api/all/postsRepository.dart'; // Posts Repository (New APIs)
 //todo =======>[Services]<=======
 export 'features/news/data/repository/post/new_api/all/postPaginationService.dart'; // Posts Service
 export 'features/news/data/repository/post/new_api/individual/postIndividualService.dart'; // Single Post Service
 export 'features/news/data/repository/post/old_api/all/postPaginationService.dart'; // Legacy Posts Service
-export 'features/news/data/repository/topics/topicsService.dart'; // Topics
+export 'features/news/data/repository/topics/topicsRepository.dart'; // Topics
 export 'features/news/view/screens/comments/all/commentsScreen.dart'; //Comments
 export 'features/news/view/screens/comments/reply/replyCommentsScreen.dart'; //Reply Comments
 export 'features/news/view/screens/comments/single/newCommentScreen.dart'; // New Comment

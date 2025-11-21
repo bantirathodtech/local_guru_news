@@ -28,15 +28,15 @@ class ReplyCommentsRepository {
     required String postId,
   }) async {
     final payload = <String, String>{
-      'userId': _userId.isNotEmpty ? _userId : '0',
-      'postId': postId,
-      'replyId': replyId,
+      'user_id': _userId.isNotEmpty ? _userId : '0',
+      'post_id': postId,
+      'reply_id': replyId,
       'page': page <= 0 ? '1' : page.toString(),
     };
 
     try {
       final response = await _apiService.post(
-        ApiEndpoints.replyCommentsApi,
+        ApiEndpoints.replyCommentsApiV1,
         payload,
         forceFormData: true,
         caller: 'ReplyCommentsRepository.getComments',
@@ -47,7 +47,10 @@ class ReplyCommentsRepository {
           .map(ReplyComments.fromJson)
           .toList(growable: false);
     } catch (error) {
-      throw Exception('Failed to fetch reply comments: $error');
+      // Handle 404 and other errors gracefully - return empty list instead of crashing
+      // The error is already logged by ApiLoggingHelper
+      // This prevents app crashes when the reply comments API is not available
+      return const [];
     }
   }
 

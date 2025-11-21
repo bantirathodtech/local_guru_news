@@ -44,6 +44,8 @@ class CustomDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final authProvider = context.watch<AuthProvider>();
     final currentUser = authProvider.currentUser;
 
@@ -56,6 +58,9 @@ class CustomDrawer extends ConsumerWidget {
     final displayName = _truncateName(userName, 15);
 
     return Drawer(
+      backgroundColor: isDark
+          ? Colors.grey.shade900
+          : Colors.white,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -128,32 +133,76 @@ class CustomDrawer extends ConsumerWidget {
 
           // ============ Tab Navigation Menu Items ============
           ListTile(
-            leading: const Icon(Icons.newspaper),
-            title: const Text('News'),
+            leading: Icon(
+              Icons.newspaper,
+              color: isDark ? Colors.grey.shade300 : Colors.black87,
+            ),
+            title: Text(
+              'News',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
             onTap: () => _switchTab(context, ref, 0),
           ),
           ListTile(
-            leading: const Icon(Icons.work),
-            title: const Text('Jobs'),
+            leading: Icon(
+              Icons.work,
+              color: isDark ? Colors.grey.shade300 : Colors.black87,
+            ),
+            title: Text(
+              'Jobs',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
             onTap: () => _switchTab(context, ref, 1),
           ),
           ListTile(
-            leading: const Icon(Icons.list_alt),
-            title: const Text('Listings'),
+            leading: Icon(
+              Icons.list_alt,
+              color: isDark ? Colors.grey.shade300 : Colors.black87,
+            ),
+            title: Text(
+              'Listings',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
             onTap: () => _switchTab(context, ref, 2),
           ),
           ListTile(
-            leading: const Icon(Icons.celebration),
-            title: const Text('Greetings'),
+            leading: Icon(
+              Icons.celebration,
+              color: isDark ? Colors.grey.shade300 : Colors.black87,
+            ),
+            title: Text(
+              'Greetings',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
             onTap: () => _switchTab(context, ref, 3),
           ),
 
-          const Divider(),
+          Divider(
+            color: isDark
+                ? Colors.grey.shade700
+                : Colors.grey.shade300,
+          ),
 
           // ============ Other Menu Items ============
           ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Profile'),
+            leading: Icon(
+              Icons.person,
+              color: isDark ? Colors.grey.shade300 : Colors.black87,
+            ),
+            title: Text(
+              'Profile',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
             onTap: () {
               Navigator.pop(context);
               Navigator.of(context).push(
@@ -163,8 +212,16 @@ class CustomDrawer extends ConsumerWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.location_on),
-            title: const Text('Location'),
+            leading: Icon(
+              Icons.location_on,
+              color: isDark ? Colors.grey.shade300 : Colors.black87,
+            ),
+            title: Text(
+              'Location',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
             onTap: () {
               Navigator.pop(context);
               Navigator.of(context).push(

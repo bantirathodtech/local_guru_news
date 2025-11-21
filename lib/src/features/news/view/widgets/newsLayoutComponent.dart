@@ -191,7 +191,7 @@ class NewsLayoutComponent extends StatelessWidget {
                               Text(
                                 time != null
                                     ? TimeAgo.displayTimeAgoFromTimestamp(time!)
-                                    : 'Just now',
+                                    : '',
                                 style: TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 12.sp,

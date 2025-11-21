@@ -136,8 +136,10 @@ class PostsModel {
       'time_label',
     ]);
 
+    // If time is missing but readableTime exists, use readableTime for both
+    // This handles the API response where only readableTime is provided
     final resolvedTime = rawTime ?? rawReadableTime;
-    final resolvedReadableTime = rawReadableTime ?? rawTime;
+    final resolvedReadableTime = rawReadableTime ?? rawTime ?? rawReadableTime;
 
     return PostsModel(
       id: _pickString(json, const ['id', 'post_id', 'postId']),
@@ -160,8 +162,13 @@ class PostsModel {
       ),
       layout: _pickString(json, const ['layout', 'layoutType', 'type']),
       media: media,
-      channel: channelName ?? _pickString(json, const ['editor', 'author']),
-      channelImage: channelImage,
+      // Channel is not provided in get_all_posts_api.php response
+      // Try to extract from media URL domain or use default
+      channel: channelName ?? 
+          _pickString(json, const ['editor', 'author']) ??
+          _extractChannelFromMedia(media),
+      // Channel image is not provided in API, try to generate from channel name or media domain
+      channelImage: channelImage ?? _extractChannelImageFromMedia(media, channelName ?? _extractChannelFromMedia(media)),
       tags: tags,
       topic: _pickString(json, const ['topic', 'category', 'section']),
       editor: _pickString(json, const ['editor', 'author', 'created_by']),
@@ -377,24 +384,50 @@ class PostsModel {
     final trimmed = candidate.replaceAll('\\', '/');
     if (trimmed.isEmpty) return null;
 
-    if (trimmed.startsWith(RegExp(r'https?:', caseSensitive: false))) {
-      return trimmed;
+    String urlToProcess = trimmed;
+
+    // Handle special schemes like file://
+    if (urlToProcess.startsWith('file://')) {
+      urlToProcess = urlToProcess.replaceFirst(RegExp(r'^file:(\/\/)+'), '');
+      if (!urlToProcess.startsWith('/')) {
+        urlToProcess = '/$urlToProcess';
+      }
     }
 
-    if (trimmed.startsWith('//')) {
-      return 'https:$trimmed';
+    // Handle nested URL structure from get_all_posts_api.php
+    // Format: "https://localguru.in/admin/database/posts/https://[actual-domain]/..."
+    if (urlToProcess.contains('/admin/database/posts/https://')) {
+      // Extract the actual source URL after the localguru path
+      final index = urlToProcess.indexOf('/admin/database/posts/https://');
+      if (index != -1) {
+        urlToProcess = urlToProcess.substring(index + '/admin/database/posts/'.length);
+      }
+    } else if (urlToProcess.contains('https://') && urlToProcess.split('https://').length > 2) {
+      // Fallback: Extract the last https:// URL (actual source)
+      final parts = urlToProcess.split('https://');
+      if (parts.length > 2) {
+        urlToProcess = 'https://${parts.last}';
+      }
     }
 
-    final lower = trimmed.toLowerCase();
+    if (urlToProcess.startsWith(RegExp(r'https?:', caseSensitive: false))) {
+      return urlToProcess;
+    }
+
+    if (urlToProcess.startsWith('//')) {
+      return 'https:$urlToProcess';
+    }
+
+    final lower = urlToProcess.toLowerCase();
     final httpIndex = lower.indexOf('http');
     if (httpIndex > 0) {
-      final potential = trimmed.substring(httpIndex);
+      final potential = urlToProcess.substring(httpIndex);
       if (potential.startsWith(RegExp(r'https?:', caseSensitive: false))) {
         return potential;
       }
     }
 
-    String sanitized = trimmed.startsWith('/') ? trimmed.substring(1) : trimmed;
+    String sanitized = urlToProcess.startsWith('/') ? urlToProcess.substring(1) : urlToProcess;
     while (sanitized.startsWith('../')) {
       sanitized = sanitized.substring(3);
     }
@@ -452,5 +485,138 @@ class PostsModel {
       return null;
     }
     return normalized;
+  }
+
+  /// Extract channel image URL from media URL domain or channel name
+  /// Tries common logo paths for news channels
+  static String? _extractChannelImageFromMedia(List<String>? media, String? channelName) {
+    if (media == null || media.isEmpty) return null;
+    
+    try {
+      // Get first media URL to extract domain
+      final firstUrl = media.first;
+      if (firstUrl.isEmpty) return null;
+
+      // Extract domain from nested URL structure
+      String urlToParse = firstUrl;
+      if (urlToParse.contains('/admin/database/posts/https://')) {
+        final index = urlToParse.indexOf('/admin/database/posts/https://');
+        if (index != -1) {
+          urlToParse = urlToParse.substring(index + '/admin/database/posts/'.length);
+        }
+      } else if (urlToParse.contains('https://') && urlToParse.split('https://').length > 2) {
+        final parts = urlToParse.split('https://');
+        if (parts.length > 2) {
+          urlToParse = 'https://${parts.last}';
+        }
+      }
+
+      final uri = Uri.tryParse(urlToParse);
+      if (uri == null || uri.host.isEmpty) return null;
+
+      final host = uri.host.toLowerCase();
+      final cleanHost = host.startsWith('www.') ? host.substring(4) : host;
+      final origin = uri.scheme.isNotEmpty ? '${uri.scheme}://$cleanHost' : 'https://$cleanHost';
+
+      // Map known channels to their logo URLs (if available)
+      final channelLogoMap = {
+        'NTV Telugu': 'https://ntvtelugu.com/favicon.ico',
+        'TV9 Telugu': 'https://images.tv9telugu.com/favicon.ico',
+        'Mana Telangana': 'https://www.manatelangana.news/favicon.ico',
+      };
+
+      // Check if we have a mapped logo for the channel name
+      if (channelName != null && channelLogoMap.containsKey(channelName)) {
+        return channelLogoMap[channelName];
+      }
+
+      // Try favicon first (most reliable)
+      final faviconUrl = '$origin/favicon.ico';
+      
+      // Also try common logo paths (UI will handle 404s gracefully)
+      // Return favicon as primary option
+      return faviconUrl;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Extract channel name from media URL domain
+  /// Handles URLs like: "https://localguru.in/admin/database/posts/https://ntvtelugu.com/..."
+  /// Extracts the actual source domain and maps it to a readable channel name
+  static String? _extractChannelFromMedia(List<String>? media) {
+    if (media == null || media.isEmpty) return null;
+    
+    try {
+      // Get first media URL
+      final firstUrl = media.first;
+      if (firstUrl.isEmpty) return null;
+
+      // Extract domain from nested URL structure
+      // URL format: "https://localguru.in/admin/database/posts/https://[actual-domain]/..."
+      String urlToParse = firstUrl;
+      
+      // Check if URL contains nested https:// (localguru.in wrapper)
+      if (urlToParse.contains('/admin/database/posts/https://')) {
+        // Extract the actual source URL after the localguru path
+        final index = urlToParse.indexOf('/admin/database/posts/https://');
+        if (index != -1) {
+          urlToParse = urlToParse.substring(index + '/admin/database/posts/'.length);
+        }
+      } else if (urlToParse.contains('https://') && urlToParse.split('https://').length > 2) {
+        // Fallback: Extract the last https:// URL
+        final parts = urlToParse.split('https://');
+        if (parts.length > 2) {
+          urlToParse = 'https://${parts.last}';
+        }
+      }
+
+      final uri = Uri.tryParse(urlToParse);
+      if (uri == null || uri.host.isEmpty) return null;
+
+      final host = uri.host.toLowerCase();
+      
+      // Remove www. prefix if present
+      final cleanHost = host.startsWith('www.') ? host.substring(4) : host;
+      
+      // Map common domain names to readable channel names
+      final channelMap = {
+        'ntvtelugu.com': 'NTV Telugu',
+        'tv9telugu.com': 'TV9 Telugu',
+        'images.tv9telugu.com': 'TV9 Telugu',
+        'manatelangana.news': 'Mana Telangana',
+        'www.manatelangana.news': 'Mana Telangana',
+      };
+      
+      // Check full host first
+      if (channelMap.containsKey(cleanHost)) {
+        return channelMap[cleanHost];
+      }
+      
+      // Check without TLD
+      final domainParts = cleanHost.split('.');
+      if (domainParts.isNotEmpty) {
+        final domainName = domainParts.first;
+        final domainMap = {
+          'ntvtelugu': 'NTV Telugu',
+          'tv9telugu': 'TV9 Telugu',
+          'images': 'TV9 Telugu',
+          'manatelangana': 'Mana Telangana',
+        };
+        
+        if (domainMap.containsKey(domainName)) {
+          return domainMap[domainName];
+        }
+        
+        // Convert domain name to title case as fallback
+        if (domainName.length > 1 && domainName != 'www') {
+          return domainName[0].toUpperCase() + domainName.substring(1);
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 }

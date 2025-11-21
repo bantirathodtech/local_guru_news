@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_guru_all/src/core/data/local/shared_prefs.dart';
 import 'package:local_guru_all/src/features/auth/data/model/userModel.dart';
 import 'package:local_guru_all/src/features/auth/data/repository/auth_repository.dart';
@@ -45,6 +46,7 @@ class AuthProvider extends ChangeNotifier {
   // }
 
   Future<void> _persistUser(UserModel user) async {
+    // Save to SharedPreferences (for AuthProvider)
     if (user.id != null) {
       await SharedPrefs.setUserId(user.id!);
       await SharedPrefs.setLoggedIn(true);
@@ -69,6 +71,29 @@ class AuthProvider extends ChangeNotifier {
     }
     if (user.role != null) {
       await SharedPrefs.setString('userRole', user.role!);
+    }
+    
+    // Also save to Hive box (for userIdProvider and other Riverpod providers)
+    try {
+      final box = Hive.box<String>('user');
+      if (user.id != null) {
+        box.put('id', user.id!);
+      }
+      if (user.name != null) {
+        box.put('name', user.name!);
+      }
+      if (user.email != null) {
+        box.put('email', user.email!);
+      }
+      if (user.role != null) {
+        box.put('role', user.role!);
+      }
+      if (user.contact != null) {
+        box.put('contact', user.contact!);
+      }
+    } catch (e) {
+      // Silently handle Hive errors - SharedPreferences is the primary storage
+      debugPrint('Error saving to Hive: $e');
     }
   }
 
@@ -112,7 +137,8 @@ class AuthProvider extends ChangeNotifier {
     final aadharNumber = await SharedPrefs.getString('userAadharNumber');
     final address = await SharedPrefs.getUserAddress();
     final role = await SharedPrefs.getString('userRole');
-    _setUser(UserModel(
+    
+    final user = UserModel(
       id: id,
       name: name,
       contact: contact,
@@ -121,7 +147,21 @@ class AuthProvider extends ChangeNotifier {
       aadharNumber: aadharNumber,
       address: address,
       role: role,
-    ));
+    );
+    
+    _setUser(user);
+    
+    // Sync to Hive box for Riverpod providers
+    try {
+      final box = Hive.box<String>('user');
+      box.put('id', id);
+      if (name != null) box.put('name', name);
+      if (email != null) box.put('email', email);
+      if (role != null) box.put('role', role);
+      if (contact != null) box.put('contact', contact);
+    } catch (e) {
+      debugPrint('Error syncing to Hive: $e');
+    }
   }
 
   // Sign in

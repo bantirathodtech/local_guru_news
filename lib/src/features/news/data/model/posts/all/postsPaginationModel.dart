@@ -69,50 +69,71 @@ class PostsPagination {
   }
 
   // -----------Update Likes Count
+  // Note: This method updates state optimistically and triggers API call
+  // The API endpoint is: add_likes_api.php
+  // Parameters: user_id, type_id, type, like
   PostsPagination likes(int id, String type, int like, int index) {
     if (posts != null && index >= 0 && index < posts!.length) {
+      // Trigger API call to add_likes_api.php (fire and forget - optimistic update)
       PostEngagementRepository.instance.react(
         typeId: id.toString(),
         type: type,
         like: like,
       );
+
+      // Create a new list to ensure state change detection
+      final updatedPosts = List<PostsModel>.from(posts!);
+      final post = updatedPosts[index];
+
+      // Update like state based on current state and action
       // User Liked
-      if (like == 1 && posts![index].liked == '0') {
-        posts![index].liked = '1';
-        posts![index].likes = (int.parse(posts![index].likes!) + 1).toString();
+      if (like == 1 && post.liked == '0') {
+        post.liked = '1';
+        final currentLikes = int.tryParse(post.likes ?? '0') ?? 0;
+        post.likes = (currentLikes + 1).toString();
       }
-      // User Already Liked
-      else if (like == 1 && posts![index].liked == '1') {
-        posts![index].liked = '0';
-        posts![index].likes = (int.parse(posts![index].likes!) - 1).toString();
+      // User Already Liked - Toggle off
+      else if (like == 1 && post.liked == '1') {
+        post.liked = '0';
+        final currentLikes = int.tryParse(post.likes ?? '0') ?? 0;
+        post.likes = (currentLikes > 0 ? currentLikes - 1 : 0).toString();
       }
       // User Already Disliked Want to Like
-      else if (like == 1 && posts![index].liked == '-1') {
-        posts![index].liked = '1';
-        posts![index].likes = (int.parse(posts![index].likes!) + 1).toString();
-        posts![index].dislikes =
-            (int.parse(posts![index].dislikes!) - 1).toString();
+      else if (like == 1 && post.liked == '-1') {
+        post.liked = '1';
+        final currentLikes = int.tryParse(post.likes ?? '0') ?? 0;
+        final currentDislikes = int.tryParse(post.dislikes ?? '0') ?? 0;
+        post.likes = (currentLikes + 1).toString();
+        post.dislikes =
+            (currentDislikes > 0 ? currentDislikes - 1 : 0).toString();
       }
-
       // User Disliked
-      else if (like == -1 && posts![index].liked == '0') {
-        posts![index].liked = '-1';
-        posts![index].dislikes =
-            (int.parse(posts![index].dislikes!) + 1).toString();
+      else if (like == -1 && post.liked == '0') {
+        post.liked = '-1';
+        final currentDislikes = int.tryParse(post.dislikes ?? '0') ?? 0;
+        post.dislikes = (currentDislikes + 1).toString();
       }
-      // User Already Disliked
-      else if (like == -1 && posts![index].liked == '-1') {
-        posts![index].liked = '0';
-        posts![index].dislikes =
-            (int.parse(posts![index].dislikes!) - 1).toString();
+      // User Already Disliked - Toggle off
+      else if (like == -1 && post.liked == '-1') {
+        post.liked = '0';
+        final currentDislikes = int.tryParse(post.dislikes ?? '0') ?? 0;
+        post.dislikes =
+            (currentDislikes > 0 ? currentDislikes - 1 : 0).toString();
       }
       // User Already Liked Want to DisLike
-      else if (like == -1 && posts![index].liked == '1') {
-        posts![index].liked = '-1';
-        posts![index].dislikes =
-            (int.parse(posts![index].dislikes!) + 1).toString();
-        posts![index].likes = (int.parse(posts![index].likes!) - 1).toString();
+      else if (like == -1 && post.liked == '1') {
+        post.liked = '-1';
+        final currentLikes = int.tryParse(post.likes ?? '0') ?? 0;
+        final currentDislikes = int.tryParse(post.dislikes ?? '0') ?? 0;
+        post.likes = (currentLikes > 0 ? currentLikes - 1 : 0).toString();
+        post.dislikes = (currentDislikes + 1).toString();
       }
+
+      return PostsPagination(
+        posts: updatedPosts,
+        page: this.page,
+        errorMessage: this.errorMessage,
+      );
     }
     return PostsPagination(
       posts: posts,

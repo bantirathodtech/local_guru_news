@@ -26,10 +26,9 @@ class GreetingsRepository {
     int page = 1,
     String topicId = '0',
   }) async {
+    // New API endpoint requires user_id parameter (not userId)
     final requestBody = <String, String>{
-      'userId': _userId.isNotEmpty ? _userId : '0',
-      'page': page <= 0 ? '1' : page.toString(),
-      'topicId': topicId.isNotEmpty ? topicId : '0',
+      'user_id': _userId.isNotEmpty ? _userId : '38', // Default to 38 if empty
     };
 
     try {
@@ -42,12 +41,24 @@ class GreetingsRepository {
 
       final decoded = response is String ? json.decode(response) : response;
       if (decoded is Map<String, dynamic>) {
-        final results = decoded['result'];
-        if (results is List) {
-          return results
-              .whereType<Map<String, dynamic>>()
-              .map(GreetingsModel.fromJson)
-              .toList(growable: false);
+        final status = decoded['status'];
+        if (status == 'success') {
+          final results = decoded['result'];
+          if (results is List) {
+            // Filter by category if topicId is provided and not '0'
+            final allGreetings = results
+                .whereType<Map<String, dynamic>>()
+                .map(GreetingsModel.fromJson)
+                .toList();
+            
+            if (topicId.isNotEmpty && topicId != '0') {
+              return allGreetings
+                  .where((greeting) => greeting.catId == topicId)
+                  .toList(growable: false);
+            }
+            
+            return allGreetings;
+          }
         }
       } else if (decoded is List) {
         return decoded

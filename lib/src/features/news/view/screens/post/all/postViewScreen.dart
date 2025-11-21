@@ -67,6 +67,9 @@ class _PostViewScreenState extends State<PostViewScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Consumer(
       builder: (context, ref, child) {
         final paginationState =
@@ -103,11 +106,12 @@ class _PostViewScreenState extends State<PostViewScreen>
                 },
                 child: Scaffold(
                   backgroundColor: Colors.black,
-                  appBar: const CustomAppBar(
+                  appBar: CustomAppBar(
                     title: 'Posts',
-                    backgroundColor: AppColors.primary,
-                    iconColor: AppColors.black,
-                    titleColor: AppColors.black,
+                    backgroundColor:
+                        isDark ? Colors.grey.shade900 : AppColors.primary,
+                    iconColor: isDark ? Colors.white : AppColors.black,
+                    titleColor: isDark ? Colors.white : AppColors.black,
                   ),
                   bottomNavigationBar: _buildSocialBanner(paginationState),
                   body: _buildVideoContent(paginationState),
@@ -121,11 +125,12 @@ class _PostViewScreenState extends State<PostViewScreen>
                     },
                     child: Scaffold(
                       backgroundColor: Colors.black,
-                      appBar: const CustomAppBar(
+                      appBar: CustomAppBar(
                         title: 'Youtube',
-                        backgroundColor: AppColors.primary,
-                        iconColor: AppColors.black,
-                        titleColor: AppColors.black,
+                        backgroundColor:
+                            isDark ? Colors.grey.shade900 : AppColors.primary,
+                        iconColor: isDark ? Colors.white : AppColors.black,
+                        titleColor: isDark ? Colors.white : AppColors.black,
                       ),
                       bottomNavigationBar: _buildSocialBanner(paginationState),
                       body: _buildYoutubeContent(paginationState),
@@ -134,11 +139,12 @@ class _PostViewScreenState extends State<PostViewScreen>
                 : widget.layout == "Slider"
                     ? Scaffold(
                         backgroundColor: Colors.black,
-                        appBar: const CustomAppBar(
+                        appBar: CustomAppBar(
                           title: 'Slider',
-                          backgroundColor: AppColors.primary,
-                          iconColor: AppColors.black,
-                          titleColor: AppColors.black,
+                          backgroundColor:
+                              isDark ? Colors.grey.shade900 : AppColors.primary,
+                          iconColor: isDark ? Colors.white : AppColors.black,
+                          titleColor: isDark ? Colors.white : AppColors.black,
                         ),
                         bottomNavigationBar:
                             _buildSocialBanner(paginationState),
@@ -151,6 +157,7 @@ class _PostViewScreenState extends State<PostViewScreen>
                             _buildSocialBanner(paginationState),
                         body: Stack(
                           children: [
+                            // Content starts from top with no padding
                             _buildDefaultContent(paginationState),
                             // Reading progress indicator
                             Positioned(
@@ -192,20 +199,27 @@ class _PostViewScreenState extends State<PostViewScreen>
     // Get description (it's already a String, not a List)
     final description = post.description ?? '';
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey.shade900 : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
         ],
         border: Border(
           top: BorderSide(
-            color: Colors.grey.withOpacity(0.2),
+            color: isDark
+                ? Colors.grey.shade700.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -238,7 +252,7 @@ class _PostViewScreenState extends State<PostViewScreen>
             top: 10,
             left: 10,
             right: 10,
-            child: _buildChannelInfo(paginationState, isDark: true),
+            child: _buildChannelInfo(paginationState),
           ),
           Align(
             alignment: Alignment.center,
@@ -289,7 +303,7 @@ class _PostViewScreenState extends State<PostViewScreen>
             top: 10,
             left: 10,
             right: 10,
-            child: _buildChannelInfo(paginationState, isDark: true),
+            child: _buildChannelInfo(paginationState),
           ),
           Align(
             alignment: Alignment.center,
@@ -327,7 +341,7 @@ class _PostViewScreenState extends State<PostViewScreen>
               top: 10,
               left: 10,
               right: 10,
-              child: _buildChannelInfo(paginationState, isDark: true),
+              child: _buildChannelInfo(paginationState),
             ),
             Align(
               alignment: Alignment.center,
@@ -352,7 +366,7 @@ class _PostViewScreenState extends State<PostViewScreen>
             top: 10,
             left: 10,
             right: 10,
-            child: _buildChannelInfo(paginationState, isDark: true),
+            child: _buildChannelInfo(paginationState),
           ),
           Align(
             alignment: Alignment.center,
@@ -449,87 +463,127 @@ class _PostViewScreenState extends State<PostViewScreen>
     return SingleChildScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.zero, // No padding - content starts from top
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Hero image section
+          // Hero image section - starts from top with no spacing
           _buildPostImage(paginationState),
 
-          // Content section with card design
+          // Content section with card design - overlapping with image
           Transform.translate(
-            offset: Offset(0, -20),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Channel Info
-                    _buildChannelInfo(paginationState),
-                    SizedBox(height: 24),
-
-                    // Title with premium typography
-                    _buildPostTitle(paginationState),
-                    SizedBox(height: 20),
-
-                    // Metadata
-                    _buildPostMetadata(paginationState),
-                    SizedBox(height: 32),
-
-                    // Divider
-                    Divider(
-                        height: 1, thickness: 1, color: AppColors.lightGrey),
-                    SizedBox(height: 32),
-
-                    // Description/Content with optimal reading width
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: 680),
-                        child: _buildPostDescription(paginationState, context),
+            offset: Offset(0,
+                -100), // Overlap image to ensure no gap and seamless connection
+            child: Builder(
+              builder: (context) {
+                final theme = Theme.of(context);
+                final isDark = theme.brightness == Brightness.dark;
+                return Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey.shade900 : Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withOpacity(0.3)
+                            : Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: Offset(0, -5),
                       ),
-                    ),
-
-                    // Editor Info if available
-                    if (paginationState.posts![widget.index!].editor !=
-                        null) ...[
-                      SizedBox(height: 48),
-                      Divider(
-                          height: 1, thickness: 1, color: AppColors.lightGrey),
-                      SizedBox(height: 32),
-                      _buildEditorInfo(paginationState),
                     ],
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Channel Info
+                        _buildChannelInfo(paginationState),
+                        SizedBox(height: 24),
 
-                    SizedBox(height: 48),
-                    Divider(
-                        height: 1, thickness: 1, color: AppColors.lightGrey),
-                    SizedBox(height: 32),
+                        // Title with premium typography
+                        _buildPostTitle(paginationState),
+                        SizedBox(height: 20),
 
-                    // Related Posts
-                    RelatedNewsCard(
-                      currentPostId: widget.id,
-                      currentPostIndex: widget.index,
-                      currentTopic: paginationState.posts![widget.index!].topic,
-                      allPosts: paginationState.posts!,
-                      maxItems: 5,
+                        // Metadata
+                        _buildPostMetadata(paginationState),
+                        SizedBox(height: 32),
+
+                        // Divider
+                        Builder(
+                          builder: (context) {
+                            final theme = Theme.of(context);
+                            final isDark = theme.brightness == Brightness.dark;
+                            return Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: isDark
+                                  ? Colors.grey.shade700
+                                  : AppColors.lightGrey,
+                            );
+                          },
+                        ),
+                        SizedBox(height: 8),
+                        // Description/Content with optimal reading width
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: 680),
+                            child:
+                                _buildPostDescription(paginationState, context),
+                          ),
+                        ),
+
+                        // Editor Info if available
+                        if (paginationState.posts![widget.index!].editor !=
+                            null) ...[
+                          Builder(
+                            builder: (context) {
+                              final theme = Theme.of(context);
+                              final isDark =
+                                  theme.brightness == Brightness.dark;
+                              return Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: isDark
+                                    ? Colors.grey.shade700
+                                    : AppColors.lightGrey,
+                              );
+                            },
+                          ),
+                          _buildEditorInfo(paginationState),
+                        ],
+
+                        Builder(
+                          builder: (context) {
+                            final theme = Theme.of(context);
+                            final isDark = theme.brightness == Brightness.dark;
+                            return Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: isDark
+                                  ? Colors.grey.shade700
+                                  : AppColors.lightGrey,
+                            );
+                          },
+                        ),
+                        // Related Posts
+                        RelatedNewsCard(
+                          currentPostId: widget.id,
+                          currentPostIndex: widget.index,
+                          currentTopic:
+                              paginationState.posts![widget.index!].topic,
+                          allPosts: paginationState.posts!,
+                          maxItems: 5,
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 32),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -537,7 +591,10 @@ class _PostViewScreenState extends State<PostViewScreen>
     );
   }
 
-  Widget _buildChannelInfo(dynamic paginationState, {bool isDark = false}) {
+  Widget _buildChannelInfo(dynamic paginationState) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     // Safely get the post data
     final post = paginationState.posts![widget.index!];
 
@@ -561,13 +618,14 @@ class _PostViewScreenState extends State<PostViewScreen>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.lightGrey,
+              color: isDark ? Colors.grey.shade700 : AppColors.lightGrey,
               width: 2,
             ),
           ),
           child: CircleAvatar(
             radius: 28,
-            backgroundColor: AppColors.lightGrey,
+            backgroundColor:
+                isDark ? Colors.grey.shade800 : AppColors.lightGrey,
             backgroundImage:
                 channelImageUrl != null && channelImageUrl.isNotEmpty
                     ? NetworkImage(channelImageUrl)
@@ -575,7 +633,8 @@ class _PostViewScreenState extends State<PostViewScreen>
             child: channelImageUrl == null || channelImageUrl.isEmpty
                 ? Icon(
                     Icons.newspaper,
-                    color: AppColors.textSecondary,
+                    color:
+                        isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                     size: 28,
                   )
                 : null,
@@ -594,7 +653,7 @@ class _PostViewScreenState extends State<PostViewScreen>
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 16.sp,
-                  color: AppColors.textPrimary,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
                   letterSpacing: 0.2,
                 ),
               ),
@@ -604,13 +663,16 @@ class _PostViewScreenState extends State<PostViewScreen>
                   Icon(
                     FontAwesomeIcons.clock,
                     size: 12.sp,
-                    color: AppColors.textSecondary,
+                    color:
+                        isDark ? Colors.grey.shade400 : AppColors.textSecondary,
                   ),
                   SizedBox(width: 6),
                   Text(
                     readableTime,
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : AppColors.textSecondary,
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -753,24 +815,35 @@ class _PostViewScreenState extends State<PostViewScreen>
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Container(
-      width: MediaQuery.of(context).size.width,
-      height: 50.h,
+      width: screenWidth,
+      height: 50.h, // Fixed height for consistent layout
+      color: isDark
+          ? Colors.grey.shade900
+          : Colors.white, // Background to match theme
       child: Stack(
         fit: StackFit.expand,
         children: [
-          FancyShimmerImage(
-            width: MediaQuery.of(context).size.width,
-            height: 50.h,
-            imageUrl: imageUrl,
-            boxFit: BoxFit.cover,
-            errorWidget: Container(
-              color: AppColors.lightGrey,
-              child: Center(
-                child: Icon(
-                  Icons.image_not_supported,
-                  size: 48,
-                  color: AppColors.textSecondary,
+          // Image container that shows full image without cropping
+          Center(
+            child: FancyShimmerImage(
+              width: screenWidth,
+              height: 50.h,
+              imageUrl: imageUrl,
+              boxFit: BoxFit
+                  .contain, // Contain shows full image without cropping or zooming
+              errorWidget: Container(
+                color: AppColors.lightGrey,
+                child: Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    size: 48,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ),
@@ -822,6 +895,8 @@ class _PostViewScreenState extends State<PostViewScreen>
   }
 
   Widget _buildPostTitle(dynamic paginationState) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final post = paginationState.posts![widget.index!];
     return Text(
       post.title ?? 'No Title Available',
@@ -830,13 +905,15 @@ class _PostViewScreenState extends State<PostViewScreen>
         fontSize: 22.sp,
         letterSpacing: -0.3,
         height: 1.3,
-        color: AppColors.textPrimary,
+        color: isDark ? Colors.white : AppColors.textPrimary,
         fontFamily: 'Roboto',
       ),
     );
   }
 
   Widget _buildPostMetadata(dynamic paginationState) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final post = paginationState.posts![widget.index!];
     final readableTime = post.readableTime ??
         (post.time != null
@@ -846,18 +923,23 @@ class _PostViewScreenState extends State<PostViewScreen>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.lightGrey.withOpacity(0.5),
+        color: isDark
+            ? Colors.grey.shade800.withOpacity(0.5)
+            : AppColors.lightGrey.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(FontAwesomeIcons.eye,
-              size: 14.sp, color: AppColors.textSecondary),
+          Icon(
+            FontAwesomeIcons.eye,
+            size: 14.sp,
+            color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
+          ),
           SizedBox(width: 8),
           Text(
             '${post.views ?? '0'} views',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
               fontSize: 13.sp,
               fontWeight: FontWeight.w500,
             ),
@@ -867,18 +949,21 @@ class _PostViewScreenState extends State<PostViewScreen>
             width: 4,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textSecondary,
+              color: isDark ? Colors.grey.shade500 : AppColors.textSecondary,
               shape: BoxShape.circle,
             ),
           ),
           SizedBox(width: 20),
-          Icon(FontAwesomeIcons.clock,
-              size: 14.sp, color: AppColors.textSecondary),
+          Icon(
+            FontAwesomeIcons.clock,
+            size: 14.sp,
+            color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
+          ),
           SizedBox(width: 8),
           Text(
             readableTime,
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
               fontSize: 13.sp,
               fontWeight: FontWeight.w500,
             ),
@@ -897,6 +982,10 @@ class _PostViewScreenState extends State<PostViewScreen>
     dynamic paginationState,
     BuildContext buildContext,
   ) {
+    final theme = Theme.of(buildContext);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : AppColors.textPrimary;
+
     final post = paginationState.posts![widget.index!];
     final fullDescription = post.fulldescription ?? post.description ?? '';
     final descriptionWithoutImgs = removeImgTags(fullDescription);
@@ -909,7 +998,7 @@ class _PostViewScreenState extends State<PostViewScreen>
           padding: HtmlPaddings.zero,
           fontSize: FontSize(18.sp),
           lineHeight: LineHeight(1.8),
-          color: AppColors.textPrimary,
+          color: textColor,
           fontFamily: 'Roboto',
           letterSpacing: 0.3,
         ),
@@ -917,33 +1006,33 @@ class _PostViewScreenState extends State<PostViewScreen>
           margin: Margins.only(bottom: 24),
           fontSize: FontSize(18.sp),
           lineHeight: LineHeight(1.8),
-          color: AppColors.textPrimary,
+          color: textColor,
           letterSpacing: 0.3,
         ),
         "h1": Style(
           margin: Margins.only(bottom: 20, top: 32),
           fontSize: FontSize(26.sp),
           fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
+          color: textColor,
           lineHeight: LineHeight(1.3),
         ),
         "h2": Style(
           margin: Margins.only(bottom: 16, top: 28),
           fontSize: FontSize(22.sp),
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: textColor,
           lineHeight: LineHeight(1.35),
         ),
         "h3": Style(
           margin: Margins.only(bottom: 14, top: 24),
           fontSize: FontSize(20.sp),
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: textColor,
           lineHeight: LineHeight(1.4),
         ),
         "strong": Style(
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: textColor,
         ),
         "em": Style(
           fontStyle: FontStyle.italic,
@@ -980,10 +1069,13 @@ class _PostViewScreenState extends State<PostViewScreen>
   }
 
   Widget _buildEditorInfo(dynamic paginationState) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -994,7 +1086,7 @@ class _PostViewScreenState extends State<PostViewScreen>
             style: TextStyle(
               fontSize: 10.sp,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
             ),
           ),
           SizedBox(height: 1.h),
@@ -1017,8 +1109,13 @@ class _PostViewScreenState extends State<PostViewScreen>
                         .toString(),
                     boxFit: BoxFit.cover,
                     errorWidget: Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.person),
+                      color: isDark ? Colors.grey.shade700 : Colors.grey[300],
+                      child: Icon(
+                        Icons.person,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
                     ),
                   ),
                 ),
@@ -1036,13 +1133,16 @@ class _PostViewScreenState extends State<PostViewScreen>
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 12.sp,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     SizedBox(height: 0.5.h),
                     Text(
                       'Editor',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
                         fontSize: 10.sp,
                       ),
                     ),
@@ -1050,7 +1150,12 @@ class _PostViewScreenState extends State<PostViewScreen>
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.message, size: 20.sp),
+                icon: Icon(
+                  Icons.message,
+                  size: 20.sp,
+                  color:
+                      isDark ? Colors.grey.shade400 : AppColors.textSecondary,
+                ),
                 onPressed: () {
                   // Contact editor functionality
                 },

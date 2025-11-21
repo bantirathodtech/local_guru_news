@@ -24,16 +24,30 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    // Theme-aware default colors
+    final defaultBackgroundColor = backgroundColor ?? 
+        (isDark ? theme.appBarTheme.backgroundColor ?? Colors.grey.shade900 
+                : AppColors.primary);
+    final defaultTitleColor = titleColor ?? 
+        (isDark ? Colors.white 
+                : AppColors.textTertiary);
+    final defaultIconColor = iconColor ?? 
+        (isDark ? Colors.white 
+                : AppColors.white);
+
     return AppBar(
-      backgroundColor: backgroundColor ?? AppColors.primary,
+      backgroundColor: defaultBackgroundColor,
       title: Text(
         title,
         style: AppTextStyles.headline2(context).copyWith(
-          color: titleColor ?? AppColors.textTertiary,
+          color: defaultTitleColor,
         ),
       ),
       iconTheme: IconThemeData(
-        color: iconColor ?? AppColors.white, // ← Uses the parameter
+        color: defaultIconColor,
       ),
       centerTitle: true,
       actions: actions,

@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -48,16 +47,13 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    // SystemChrome.setSystemUIOverlayStyle(
-    //   SystemUiOverlayStyle(
-    //     statusBarColor: Colors.white,
-    //     statusBarIconBrightness: Brightness.dark,
-    //   ),
-    // );
-    // Box<String> box = Hive.box('user');
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return Sizer(
       builder: (context, orientation, deviceType) {
         // Initialize ScreenUtil with safer parameters - moved to didChangeDependencies
@@ -70,15 +66,9 @@ class MyApp extends StatelessWidget {
         );
         return MaterialApp(
           title: appName,
-          theme: ThemeData(
-            primarySwatch: Colors.red,
-            scaffoldBackgroundColor: primaryColor,
-            appBarTheme: AppBarTheme(
-              backgroundColor: primaryColor,
-              elevation: 0,
-              systemOverlayStyle: SystemUiOverlayStyle.light,
-            ),
-          ),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeMode,
           debugShowCheckedModeBanner: false,
           home: const SplashScreenV2(),
         );

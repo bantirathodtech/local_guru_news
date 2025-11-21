@@ -195,6 +195,10 @@ class _DashBoardScreenState extends ConsumerState<DashBoardScreen> {
       _controller?.jumpToTab(0);
     }
 
+    final theme = Theme.of(context);
+    final bottomNavTheme = theme.bottomNavigationBarTheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: DoubleBackToCloseApp(
         snackBar: const SnackBar(
@@ -208,19 +212,23 @@ class _DashBoardScreenState extends ConsumerState<DashBoardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
+        backgroundColor: bottomNavTheme.backgroundColor ?? 
+            (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+        selectedItemColor: bottomNavTheme.selectedItemColor ?? 
+            (isDark ? theme.colorScheme.primary : Colors.black),
+        unselectedItemColor: bottomNavTheme.unselectedItemColor ?? 
+            (isDark ? Colors.grey.shade400 : Colors.grey),
         selectedLabelStyle: TextStyle(
           fontSize: 16.sp,
           fontWeight: FontWeight.bold,
-          decoration: TextDecoration.underline, // Underline for selected label
-          decorationColor: Colors.black, // Black underline color
-          decorationThickness: 2, // Thickness for underline
+          decoration: TextDecoration.underline,
+          decorationColor: bottomNavTheme.selectedItemColor ?? 
+              (isDark ? theme.colorScheme.primary : Colors.black),
+          decorationThickness: 2,
         ),
         unselectedLabelStyle: TextStyle(
           fontSize: 12.sp,
-          decoration: TextDecoration.none, // No underline for unselected label
+          decoration: TextDecoration.none,
         ),
         onTap: (index) {
           if (index >= 0 && index < _tabs.length) {

@@ -6,15 +6,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_guru_all/src/core/components/appBar/app_bar.dart';
 import 'package:local_guru_all/src/core/log/logging.dart';
-import 'package:local_guru_all/src/features/location/viewmodel/location_provider.dart';
+import 'package:local_guru_all/src/features/news/data/model/politician/politicians_Model.dart';
 import 'package:local_guru_all/src/src.dart';
-import 'package:provider/provider.dart' hide Consumer;
 import 'package:sizer/sizer.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../widgets/legacy_filter_bar.dart';
 import '../widgets/news_feed_card.dart';
+import 'package:local_guru_all/src/features/location/viewmodel/location_provider.dart';
+import 'package:local_guru_all/src/features/location/data/model/state_model.dart';
+import 'package:local_guru_all/src/features/location/data/model/district_model.dart';
+import 'package:local_guru_all/src/features/location/data/model/landmark_model.dart';
+import 'package:provider/provider.dart' as provider;
 
 class NewsDashboard extends ConsumerStatefulWidget {
   const NewsDashboard({Key? key}) : super(key: key);
@@ -30,16 +34,12 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
     developer.log('NewsDashboard screen opened/initialized');
     print('NewsDashboard screen opened/initialized');
 
-    // Ensure posts are loaded when screen initializes
+    // Ensure posts are loaded when screen initializes (one-time only)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final paginationState = ref.read(legacyPostPaginationControllerProvider);
-      if (paginationState.posts == null || paginationState.posts!.isEmpty) {
-        AppLogger.logInfo(
-          'Legacy init trigger: posts empty, requesting first page',
-          tag: 'legacyNewsView',
-        );
-        ref.read(legacyPostPaginationControllerProvider.notifier).getPosts();
-      }
+      // Use initializePosts() which has proper guards
+      ref
+          .read(legacyPostPaginationControllerProvider.notifier)
+          .initializePosts();
     });
   }
 
@@ -69,6 +69,29 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
     }
 
     return trimmed;
+  }
+
+  void _onPoliticianSelected(PoliticianModel person) {
+    if (person.id == null || person.id!.isEmpty) {
+      AppLogger.logWarning(
+        'Politician selection skipped: missing id',
+        tag: 'legacyNewsView',
+      );
+      return;
+    }
+
+    ref.read(selectedPoliticianIdProvider.notifier).state = person.id;
+    ref.read(topicId.notifier).state = 'politician/${person.id}';
+    ref.read(topicType.notifier).state = 'politician';
+    // Don't change the topic name when selecting a politician
+    // This keeps the topic chip (e.g., "politician") visually selected
+    // The TopicListComponent checks topicType to determine if politician topic is selected
+
+    AppLogger.logInfo(
+      'Quick politician selected id=${person.id}',
+      tag: 'legacyNewsView',
+    );
+    ref.read(legacyPostPaginationControllerProvider.notifier).resetPosts();
   }
 
   // Build individual post item (extracted for reusability)
@@ -203,25 +226,57 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
 
       final paginationState = ref.watch(legacyPostPaginationControllerProvider);
       final politiciansState = ref.watch(politiciansControllerProvider);
+      final selectedPoliticianId = ref.watch(selectedPoliticianIdProvider);
+      final currentTopicType = ref.watch(topicType);
 
       AppLogger.logInfo(
         'Legacy UI state received: page=${paginationState.page}, posts=${paginationState.posts?.length ?? 0}',
         tag: 'legacyNewsView',
       );
 
-      final politicians = (politiciansState.politicians ?? [])
-          .where((entry) => (entry.type ?? '').toLowerCase() == 'politician')
-          .toList();
+      // PoliticiansService already filters for type == 'politician', so no need to filter again
+      final politicians = politiciansState.politicians ?? [];
+      final isPoliticianTopic =
+          currentTopicType.toLowerCase() == 'politician';
+
+      final shouldAutoSelectFirstPolitician = isPoliticianTopic &&
+          (selectedPoliticianId?.isEmpty ?? true) &&
+          politicians.isNotEmpty &&
+          !politiciansState.isLoading;
+
+      if (shouldAutoSelectFirstPolitician) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _onPoliticianSelected(politicians.first);
+        });
+      }
+
+      
+      developer.log(
+        'NewsDashboard: Politicians count: ${politicians.length}, '
+        'State politicians: ${politiciansState.politicians?.length ?? 0}, '
+        'Error: ${politiciansState.errorMessage ?? "none"}',
+      );
+      
+      // REMOVED: API call from build method - this was causing continuous API calls
+      // Politicians are now fetched once in initState with _politiciansFetched flag
       final selectedLandmarkRaw = ref.watch(selectedLocation);
       final selectedLandmarkLabel = _formatLandmarkLabel(selectedLandmarkRaw);
+      final theme = Theme.of(context);
+      final isDark = theme.brightness == Brightness.dark;
 
       return SafeArea(
         child: Scaffold(
+          backgroundColor: isDark
+              ? Colors.grey.shade900
+              : theme.scaffoldBackgroundColor,
           appBar: CustomAppBar(
-            title: 'Local Guru News',
-            backgroundColor: AppColors.primary,
-            iconColor: AppColors.black,
-            titleColor: AppColors.black,
+            title: 'Localguru',
+            backgroundColor: isDark
+                ? Colors.grey.shade900
+                : AppColors.primary,
+            iconColor: isDark ? Colors.white : AppColors.black,
+            titleColor: isDark ? Colors.white : AppColors.black,
             actions: [
               Semantics(
                 label: 'Selected landmark: $selectedLandmarkLabel',
@@ -232,18 +287,22 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
                     children: [
                       Icon(
                         Icons.location_on_outlined,
-                        color: AppColors.black,
+                        color: isDark ? Colors.white : AppColors.black,
                       ),
                       const SizedBox(width: 4),
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 140),
                         child: Text(
                           selectedLandmarkLabel,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.black,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -288,140 +347,106 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
               : SizedBox.shrink(),
           body: Column(
             children: [
-              // Search bar with user profile avatar and search functionality
+              // Search bar
               Padding(
                 padding: const EdgeInsets.only(
                     top: 10, bottom: 5, left: 10, right: 10),
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: 50,
-                  child: Row(
-                    children: [
-                      // Builder(
-                      //   builder: (context) => InkWell(
-                      //     onTap: () {
-                      //       final auth =
-                      //           classic_provider.Provider.of<AuthProvider>(
-                      //               context,
-                      //               listen: false);
-                      //       if (auth.currentUser != null) {
-                      //         Navigator.push(
-                      //           context,
-                      //           MaterialPageRoute(
-                      //             builder: (context) => const ProfileScreenV2(),
-                      //           ),
-                      //         );
-                      //       } else {
-                      //         _showLoginRegisterDialog(context);
-                      //       }
-                      //     },
-                      //     child: Container(
-                      //       height: 35,
-                      //       width: 35,
-                      //       decoration: BoxDecoration(
-                      //         color: disabledColor,
-                      //         image: box.containsKey('profile') &&
-                      //                 box.get('profile') != null
-                      //             ? DecorationImage(
-                      //                 image: NetworkImage(
-                      //                     box.get('profile').toString()),
-                      //                 fit: BoxFit.cover,
-                      //                 onError: (exception, stackTrace) {
-                      //                   developer.log(
-                      //                       'Profile image loading error: $exception');
-                      //                 },
-                      //               )
-                      //             : DecorationImage(
-                      //                 image: AssetImage(
-                      //                     'assets/placeholders/user.png'),
-                      //                 fit: BoxFit.cover,
-                      //               ),
-                      //         shape: BoxShape.circle,
-                      //         border: Border.all(
-                      //           width: 1,
-                      //           style: BorderStyle.solid,
-                      //           color: disabledColor,
-                      //         ),
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          child: Container(
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.grey,
-                                width: 1,
-                              ),
-                            ),
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => SearchScreen()),
-                                );
-                              },
-                              child: Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 16),
-                                    child: Icon(
-                                      FontAwesomeIcons.search,
-                                      size: 20,
-                                      color: disabledColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Text(
-                                      'Search News',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 16.sp,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                child: Builder(
+                  builder: (context) {
+                    final theme = Theme.of(context);
+                    final isDark = theme.brightness == Brightness.dark;
+                    return Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey.shade800 : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade300,
+                          width: 1,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton.filledTonal(
-                        onPressed: () async {
-                          final locationProvider =
-                              context.read<LocationProvider>();
-                          await showLegacyFilters(
-                            context: context,
-                            ref: ref,
-                            locationProvider: locationProvider,
-                            politicians: politicians,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SearchScreen()),
                           );
                         },
-                        icon: const Icon(Icons.tune_rounded),
-                        tooltip: 'Open filters',
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16),
+                              child: Icon(
+                                FontAwesomeIcons.search,
+                                size: 20,
+                                color: isDark
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                'Search News',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.grey.shade300
+                                      : Colors.grey.shade600,
+                                  fontSize: 16.sp,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
-
               // Adaptive filter surface (topics, location, people)
               LegacyFilterBar(),
+              if (isPoliticianTopic)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: _PoliticianTopicPanel(
+                    state: politiciansState,
+                    selectedId: selectedPoliticianId,
+                    onSelect: _onPoliticianSelected,
+                    onLoadMore: () => ref
+                        .read(politiciansControllerProvider.notifier)
+                        .loadMorePoliticians(),
+                    onRetry: () => ref
+                        .read(politiciansControllerProvider.notifier)
+                        .loadInitialPoliticians(
+                          search: politiciansState.searchQuery,
+                        ),
+                  ),
+                ),
+              if (currentTopicType.toLowerCase() == 'location')
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: _LocationTopicPanel(
+                    onLocationChanged: () {
+                      // Reset posts when location selection changes
+                      ref
+                          .read(legacyPostPaginationControllerProvider.notifier)
+                          .resetPosts();
+                    },
+                  ),
+                ),
 
               // Posts list expanded to use remaining vertical space
               Expanded(
                 child: Container(
-                  color: AppColors.background,
+                  color: isDark
+                      ? Colors.grey.shade900
+                      : theme.scaffoldBackgroundColor,
                   child: Builder(
                     builder: (context) {
                       try {
@@ -465,32 +490,29 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
                           loadingWidget: ListView.separated(
                             shrinkWrap: true,
                             itemBuilder: (context, index) {
-                              return NewsShimmer();
+                              return const ImprovedNewsShimmer();
                             },
                             separatorBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 8),
-                                child: Divider(
-                                  thickness: 2.0,
-                                  color: Colors.grey.shade300,
-                                ),
-                              );
+                              return const SizedBox(height: 8);
                             },
                             itemCount: 4,
                           ),
-                          errorWidget: ErrorBody(
-                            message: paginationState.errorMessage,
-                            textSize: 16.sp,
+                          errorWidget: ErrorWidgetImproved(
+                            message: paginationState.errorMessage ?? 'Failed to load news',
+                            onRetry: () {
+                              ref.invalidate(legacyPostPaginationControllerProvider);
+                            },
                           ),
                           shrinkWrap: true,
                           physics: BouncingScrollPhysics(),
                         );
                       } catch (e) {
                         developer.log('Error in posts builder: $e');
-                        return ErrorBody(
-                          message: 'Error loading posts',
-                          textSize: 16.sp,
+                        return ErrorWidgetImproved(
+                          message: 'Error loading posts. Please try again.',
+                          onRetry: () {
+                            ref.invalidate(legacyPostPaginationControllerProvider);
+                          },
                         );
                       }
                     },
@@ -635,8 +657,8 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
                                 final userId = ref.read(userIdProvider);
                                 if (userId.isNotEmpty && userId != '0') {
                                   ref
-                                      .read(topicsControllerProvider.notifier)
-                                      .newTopic(
+                                      .read(topicsProvider.notifier)
+                                      .addTopic(
                                         politician.id!,
                                         politician.name!,
                                         politician.type!,
@@ -701,5 +723,435 @@ class _NewsDashboardState extends ConsumerState<NewsDashboard> {
       developer.log('Error in politicians section: $e');
       return ErrorBody(message: 'Error loading politicians');
     }
+  }
+}
+
+class _PoliticianTopicPanel extends StatelessWidget {
+  const _PoliticianTopicPanel({
+    required this.state,
+    required this.selectedId,
+    required this.onSelect,
+    required this.onLoadMore,
+    required this.onRetry,
+  });
+
+  final PoliticiansModelProvider state;
+  final String? selectedId;
+  final ValueChanged<PoliticianModel> onSelect;
+  final VoidCallback onLoadMore;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasData = state.politicians != null && state.politicians!.isNotEmpty;
+
+    return SizedBox(
+      height: 70,
+      width: double.infinity,
+      child: _buildContent(context, hasData),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, bool hasData) {
+    if (state.isLoading && !hasData) {
+      return const Center(
+        child: SizedBox(
+          height: 24,
+          width: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if ((state.politicians?.isEmpty ?? true) &&
+        (state.errorMessage?.isNotEmpty ?? false)) {
+      return Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Unable to load politicians. Please try again.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: Colors.red),
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            child: const Text('Retry'),
+          ),
+        ],
+      );
+    }
+
+    final people = state.politicians ?? [];
+    if (people.isEmpty) {
+      return Text(
+        'No politicians available right now.',
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: Colors.grey),
+      );
+    }
+
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      itemCount: people.length + (state.hasMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= people.length) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: FilterChip(
+              avatar: const Icon(Icons.more_horiz, size: 18),
+              label: const Text('More'),
+              onSelected: (_) => onLoadMore(),
+              selectedColor:
+                  Theme.of(context).colorScheme.primary.withOpacity(0.12),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+              ),
+            ),
+          );
+        }
+
+        final person = people[index];
+        final isSelected = selectedId == person.id;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          child: FilterChip(
+            avatar: CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.grey.shade200,
+              backgroundImage: (person.profile?.isNotEmpty ?? false)
+                  ? NetworkImage(person.profile!)
+                  : null,
+              child: (person.profile?.isEmpty ?? true)
+                  ? Text(
+                      (person.name?.isNotEmpty ?? false)
+                          ? person.name!.characters.first.toUpperCase()
+                          : '?',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    )
+                  : null,
+            ),
+            label: Text(person.name ?? 'Unknown'),
+            selected: isSelected,
+            selectedColor:
+                Theme.of(context).colorScheme.primary.withOpacity(0.12),
+            onSelected: (value) {
+              if (!value) return;
+              onSelect(person);
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LocationTopicPanel extends ConsumerStatefulWidget {
+  const _LocationTopicPanel({required this.onLocationChanged});
+
+  final VoidCallback onLocationChanged;
+
+  @override
+  ConsumerState<_LocationTopicPanel> createState() =>
+      _LocationTopicPanelState();
+}
+
+class _LocationTopicPanelState extends ConsumerState<_LocationTopicPanel> {
+  bool _hasAutoSelectedTelangana = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load states when panel is created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        provider.Provider.of<LocationProvider>(context, listen: false).loadStates();
+      }
+    });
+  }
+
+  void _autoSelectTelanganaIfNeeded() {
+    final currentTopicType = ref.read(topicType);
+    final selectedStateId = ref.read(selectedNewsStateIdProvider);
+    final locationProvider = provider.Provider.of<LocationProvider>(context, listen: false);
+    
+    // Auto-select Telangana only once when location topic is selected and no state is selected yet
+    if (!_hasAutoSelectedTelangana &&
+        currentTopicType.toLowerCase() == 'location' &&
+        (selectedStateId == null || selectedStateId.isEmpty) &&
+        locationProvider.states.isNotEmpty &&
+        !locationProvider.isLoading) {
+      _hasAutoSelectedTelangana = true;
+      
+      // Find Telangana state (ID: "1")
+      try {
+        final telanganaState = locationProvider.states.firstWhere(
+          (state) => state.id == '1',
+          orElse: () => locationProvider.states.first, // Fallback to first state if Telangana not found
+        );
+        _onStateSelected(telanganaState);
+      } catch (e) {
+        // If no states available, do nothing
+      }
+    }
+  }
+
+  void _onStateSelected(StateModel? state) {
+    if (state == null) {
+      // Clear all selections
+      ref.read(selectedNewsStateIdProvider.notifier).state = null;
+      ref.read(selectedNewsStateNameProvider.notifier).state = null;
+      ref.read(selectedNewsDistrictIdProvider.notifier).state = null;
+      ref.read(selectedNewsDistrictNameProvider.notifier).state = null;
+      ref.read(selectedNewsLandmarkIdProvider.notifier).state = null;
+      ref.read(selectedNewsLandmarkNameProvider.notifier).state = null;
+      widget.onLocationChanged();
+      return;
+    }
+
+    ref.read(selectedNewsStateIdProvider.notifier).state = state.id;
+    ref.read(selectedNewsStateNameProvider.notifier).state = state.state;
+    // Clear district and landmark when state changes
+    ref.read(selectedNewsDistrictIdProvider.notifier).state = null;
+    ref.read(selectedNewsDistrictNameProvider.notifier).state = null;
+    ref.read(selectedNewsLandmarkIdProvider.notifier).state = null;
+    ref.read(selectedNewsLandmarkNameProvider.notifier).state = null;
+
+    // Load districts for selected state
+    provider.Provider.of<LocationProvider>(context, listen: false).selectState(state.id);
+    widget.onLocationChanged();
+  }
+
+  void _onDistrictSelected(DistrictModel? district) {
+    if (district == null) {
+      ref.read(selectedNewsDistrictIdProvider.notifier).state = null;
+      ref.read(selectedNewsDistrictNameProvider.notifier).state = null;
+      ref.read(selectedNewsLandmarkIdProvider.notifier).state = null;
+      ref.read(selectedNewsLandmarkNameProvider.notifier).state = null;
+      widget.onLocationChanged();
+      return;
+    }
+
+    ref.read(selectedNewsDistrictIdProvider.notifier).state = district.districtId;
+    // Use English name for API compatibility
+    ref.read(selectedNewsDistrictNameProvider.notifier).state = 
+        district.districtEnglish.isNotEmpty ? district.districtEnglish : district.district;
+    // Clear landmark when district changes
+    ref.read(selectedNewsLandmarkIdProvider.notifier).state = null;
+    ref.read(selectedNewsLandmarkNameProvider.notifier).state = null;
+
+    final stateId = ref.read(selectedNewsStateIdProvider);
+    if (stateId != null) {
+      provider.Provider.of<LocationProvider>(context, listen: false)
+          .selectDistrict(stateId, district.districtId);
+    }
+    widget.onLocationChanged();
+  }
+
+  void _onLandmarkSelected(LandmarkModel? landmark) {
+    if (landmark == null) {
+      ref.read(selectedNewsLandmarkIdProvider.notifier).state = null;
+      ref.read(selectedNewsLandmarkNameProvider.notifier).state = null;
+      widget.onLocationChanged();
+      return;
+    }
+
+    ref.read(selectedNewsLandmarkIdProvider.notifier).state = landmark.landmarkId;
+    // Use English name for API compatibility
+    ref.read(selectedNewsLandmarkNameProvider.notifier).state = 
+        landmark.landmarkEnglish.isNotEmpty ? landmark.landmarkEnglish : landmark.landmark;
+    provider.Provider.of<LocationProvider>(context, listen: false).selectLandmark(landmark.landmarkId);
+    widget.onLocationChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locationProvider = provider.Provider.of<LocationProvider>(context);
+    final selectedStateId = ref.watch(selectedNewsStateIdProvider);
+    final selectedDistrictId = ref.watch(selectedNewsDistrictIdProvider);
+    final selectedLandmarkId = ref.watch(selectedNewsLandmarkIdProvider);
+
+    // Auto-select Telangana when states are loaded and no state is selected
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _autoSelectTelanganaIfNeeded();
+      }
+    });
+
+    return SizedBox(
+      height: 70,
+      width: double.infinity,
+      child: Row(
+        children: [
+          // State Dropdown
+          Expanded(
+            child: _LocationDropdown<StateModel>(
+              label: 'State',
+              items: locationProvider.states,
+              selectedId: selectedStateId,
+              getItemId: (item) => item.id,
+              getItemName: (item) => item.state,
+              onChanged: _onStateSelected,
+              isLoading: locationProvider.isLoading && locationProvider.states.isEmpty,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // District Dropdown
+          Expanded(
+            child: _LocationDropdown<DistrictModel>(
+              label: 'District',
+              items: locationProvider.districts,
+              selectedId: selectedDistrictId,
+              getItemId: (item) => item.districtId,
+              getItemName: (item) => item.district,
+              onChanged: _onDistrictSelected,
+              isLoading: locationProvider.isLoading && selectedStateId != null,
+              enabled: selectedStateId != null,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Landmark Dropdown
+          Expanded(
+            child: _LocationDropdown<LandmarkModel>(
+              label: 'Landmark',
+              items: locationProvider.landmarks,
+              selectedId: selectedLandmarkId,
+              getItemId: (item) => item.landmarkId,
+              getItemName: (item) => item.landmark,
+              onChanged: _onLandmarkSelected,
+              isLoading: locationProvider.isLoading && selectedDistrictId != null,
+              enabled: selectedDistrictId != null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LocationDropdown<T> extends StatelessWidget {
+  const _LocationDropdown({
+    required this.label,
+    required this.items,
+    required this.selectedId,
+    required this.getItemId,
+    required this.getItemName,
+    required this.onChanged,
+    this.isLoading = false,
+    this.enabled = true,
+  });
+
+  final String label;
+  final List<T> items;
+  final String? selectedId;
+  final String Function(T) getItemId;
+  final String Function(T) getItemName;
+  final ValueChanged<T?> onChanged;
+  final bool isLoading;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    if (isLoading) {
+      return Center(
+        child: SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.colorScheme.primary,
+            ),
+          ),
+        ),
+      );
+    }
+
+    T? selectedItem;
+    if (selectedId != null && items.isNotEmpty) {
+      try {
+        selectedItem = items.firstWhere(
+          (item) => getItemId(item) == selectedId,
+        );
+      } catch (_) {
+        selectedItem = null;
+      }
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey.shade800 : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: enabled
+              ? (isDark ? Colors.grey.shade700 : Colors.grey.shade300)
+              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T?>(
+          value: selectedItem,
+          isExpanded: true,
+          isDense: true,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          hint: Text(
+            'Select $label',
+            style: TextStyle(
+              color: enabled
+                  ? (isDark ? Colors.grey.shade400 : Colors.grey.shade600)
+                  : (isDark ? Colors.grey.shade700 : Colors.grey.shade400),
+              fontSize: 14,
+            ),
+          ),
+          items: [
+            // "None" option to clear selection
+            DropdownMenuItem<T?>(
+              value: null,
+              child: Text(
+                'Select $label',
+                style: TextStyle(
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            ...items.map((item) {
+              final isSelected = getItemId(item) == selectedId;
+              return DropdownMenuItem<T?>(
+                value: item,
+                child: Text(
+                  getItemName(item),
+                  style: TextStyle(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : (isDark ? Colors.grey.shade300 : Colors.grey.shade900),
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+          ],
+          onChanged: enabled ? (value) => onChanged(value) : null,
+          dropdownColor: isDark ? Colors.grey.shade800 : Colors.white,
+          icon: Icon(
+            Icons.arrow_drop_down,
+            color: enabled
+                ? (isDark ? Colors.grey.shade400 : Colors.grey.shade600)
+                : (isDark ? Colors.grey.shade700 : Colors.grey.shade400),
+          ),
+        ),
+      ),
+    );
   }
 }

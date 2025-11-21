@@ -58,8 +58,8 @@ class _FollowersState extends State<Followers> {
                             onTap: () {
                               if (userId.isNotEmpty && userId != '0') {
                                 ref
-                                    .read(topicsControllerProvider.notifier)
-                                    .newTopic(
+                                    .read(topicsProvider.notifier)
+                                    .addTopic(
                                       politiciansState
                                           .politicians![politicianIndex].id!,
                                       politiciansState
@@ -122,8 +122,8 @@ class _FollowersState extends State<Followers> {
                             onTap: () {
                               if (userId.isNotEmpty && userId != '0') {
                                 ref
-                                    .read(topicsControllerProvider.notifier)
-                                    .newTopic(
+                                    .read(topicsProvider.notifier)
+                                    .addTopic(
                                       politiciansState
                                           .politicians![politicianIndex].id!,
                                       politiciansState

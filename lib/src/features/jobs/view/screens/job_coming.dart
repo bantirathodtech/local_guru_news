@@ -9,12 +9,17 @@ class JobComing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Jobs',
-        backgroundColor: AppColors.primary,
-        iconColor: AppColors.black,
-        titleColor: AppColors.black,
+        backgroundColor: isDark
+            ? Colors.grey.shade900
+            : AppColors.primary,
+        iconColor: isDark ? Colors.white : AppColors.black,
+        titleColor: isDark ? Colors.white : AppColors.black,
       ),
       drawer: const CustomDrawer(),
       body: Container(

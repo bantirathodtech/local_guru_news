@@ -60,21 +60,30 @@ class ApiEndpoints {
   // ============================
   // static const String postApi = '${newsUrl}posts_api.php';
   static const String getAllPostsApi = '${newsUrlV1}get_all_posts_api.php';
+  static const String getPostsByTopicApi = '${newsUrlV1}get_posts_by_topic_api.php';
   static const String fetchEditorPostsApi =
       '${newsUrlV1}fetch_editor_posts_api.php';
   // static const String postByIdApi = '${newsUrl}postById_api.php';
   static const String postByIdApi = '${newsUrlV1}postById_api.php';
   // static const String topicsApi = '${newsUrlV1}topics_api.php';
-  static const String topicsApi = '${editorApiV1}topics_api.php';
+  // static const String topicsApi = '${editorApiV1}topics_api.php';
+  static const String topicsApi = '${editorApiV1}get_topics_api.php';
   static const String politicianApi = '${newsUrlV1}politicians_api.php';
+  static const String listPoliticiansApi =
+      '${editorApiV1}list_politicians_api.php';
+  static const String listPoliticianNewsApi =
+      '${editorApiV1}list_politician_news_api.php';
   static const String commentsApi = '${newsUrlV1}comments_api.php';
   static const String replyCommentsApi = '${newsUrlV1}replyComments.php';
+  static const String replyCommentsApiV1 = '${newsUrlV1}reply_comments_api.php';
   static const String viewCountUpdateApi =
       '${newsUrlV1}view_count_update_api.php';
   static const String whatsShareCountApi =
       '${newsUrlV1}whats_share_count_api.php';
-  static const String likeApi = '${newsUrlV1}like_api.php';
-  static const String newCommentApi = '${newsUrlV1}new_comment_api.php';
+  // static const String likeApi = '${newsUrlV1}like_api.php';
+  static const String likeApi = '${newsUrlV1}add_likes_api.php';
+  // static const String newCommentApi = '${newsUrlV1}new_comment_api.php';
+  static const String newCommentApi = '${newsUrlV1}add_comments_api.php';
   static const String reportApi = '${newsUrlV1}report_api.php';
   static const String updatePoliticianStatusApi =
       '${newsUrlV1}update_politician_status_api.php';
@@ -97,7 +106,10 @@ class ApiEndpoints {
   // ============================
   // 🎉 Greetings APIs
   // ============================
-  static const String greetingsApi = '${greetingUrlV1}greetings_api.php';
+  static const String greetingsApi = '${editorApiV1}get_greetings_api.php';
+  static const String greetingsCategoriesApi =
+      '${editorApiV1}get_greetings_cat_api.php';
+  // Legacy endpoint kept for backward compatibility
   static const String greetingsTopicsApi =
       '${greetingUrlV1}greetings_topics_api.php';
 

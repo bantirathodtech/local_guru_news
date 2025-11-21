@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:local_guru_all/src/core/constants/app_colors.dart';
 import 'package:sizer/sizer.dart';
 
 class JobDetails extends StatelessWidget {
@@ -26,13 +27,17 @@ class JobDetails extends StatelessWidget {
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: isDark ? Colors.grey.shade900 : AppColors.primary,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(
             Icons.chevron_left_rounded,
-            color: Colors.black,
+            color: isDark ? Colors.white : Colors.black,
           ),
         ),
       ),

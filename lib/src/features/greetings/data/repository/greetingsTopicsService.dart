@@ -24,13 +24,12 @@ class GreetingsTopicsRepository {
   final String _userId;
 
   Future<List<GreetingsTopics>> getGreetings() async {
-    final requestBody = <String, String>{
-      'userId': _userId.isNotEmpty ? _userId : '0',
-    };
+    // New API endpoint doesn't require userId parameter
+    final requestBody = <String, String>{};
 
     try {
       final response = await _apiService.post(
-        ApiEndpoints.greetingsTopicsApi,
+        ApiEndpoints.greetingsCategoriesApi,
         requestBody,
         forceFormData: true,
         caller: 'GreetingsTopicsRepository.getGreetings',
@@ -38,12 +37,15 @@ class GreetingsTopicsRepository {
 
       final decoded = response is String ? json.decode(response) : response;
       if (decoded is Map<String, dynamic>) {
-        final results = decoded['result'];
-        if (results is List) {
-          return results
-              .whereType<Map<String, dynamic>>()
-              .map(GreetingsTopics.fromJson)
-              .toList(growable: false);
+        final status = decoded['status'];
+        if (status == 'success') {
+          final results = decoded['result'];
+          if (results is List) {
+            return results
+                .whereType<Map<String, dynamic>>()
+                .map(GreetingsTopics.fromJson)
+                .toList(growable: false);
+          }
         }
       } else if (decoded is List) {
         return decoded
@@ -55,7 +57,7 @@ class GreetingsTopicsRepository {
       return const [];
     } catch (error, stackTrace) {
       Error.throwWithStackTrace(
-        Exception('Failed to fetch greeting topics: $error'),
+        Exception('Failed to fetch greeting categories: $error'),
         stackTrace,
       );
     }

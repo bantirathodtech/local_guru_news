@@ -32,17 +32,22 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Consumer(
       builder: (context, ref, child) {
         final locationProvider = context.watch<LocationProvider>();
         ref.watch(legacyPostPaginationControllerProvider);
 
         return Scaffold(
-          appBar: const CustomAppBar(
+          appBar: CustomAppBar(
             title: 'మీ ప్రాంతాన్ని ఎంచుకోండి',
-            backgroundColor: AppColors.primary,
-            iconColor: AppColors.black,
-            titleColor: AppColors.black,
+            backgroundColor: isDark
+                ? Colors.grey.shade900
+                : AppColors.primary,
+            iconColor: isDark ? Colors.white : AppColors.black,
+            titleColor: isDark ? Colors.white : AppColors.black,
           ),
           bottomNavigationBar: ref.watch(locationLandmark).isNotEmpty
               ? Padding(
@@ -68,7 +73,9 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                               (route) => false);
                       ref.read(currentIndexProvider.notifier).state = 0;
                     },
-                    backgroundColor: Colors.black,
+                    backgroundColor: isDark
+                        ? theme.colorScheme.primary
+                        : Colors.black,
                     foregroundColor: Colors.white,
                   ),
                 )
@@ -96,7 +103,9 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                         : ListView(
                             children: [
                               Card(
-                                color: AppColors.white,
+                                color: isDark
+                                    ? Colors.grey.shade900
+                                    : AppColors.white,
                                 elevation: 2,
                                 margin: EdgeInsets.symmetric(vertical: 1.h),
                                 shape: RoundedRectangleBorder(
@@ -113,7 +122,9 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                                         style: TextStyle(
                                           fontSize: 18.sp,
                                           fontWeight: FontWeight.w700,
-                                          color: Colors.black,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black,
                                         ),
                                       ),
                                       SizedBox(height: 1.h),
@@ -126,14 +137,20 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                                                   .selectedStateId ==
                                               state.id;
                                           return ChoiceChip(
-                                            backgroundColor: Colors.white,
-                                            selectedColor: Colors.black,
+                                            backgroundColor: isDark
+                                                ? Colors.grey.shade800
+                                                : Colors.white,
+                                            selectedColor: isDark
+                                                ? theme.colorScheme.primary
+                                                : Colors.black,
                                             label: Text(
                                               state.state,
                                               style: TextStyle(
                                                 color: selected
                                                     ? Colors.white
-                                                    : Colors.black,
+                                                    : (isDark
+                                                        ? Colors.white
+                                                        : Colors.black),
                                                 fontSize: 12.sp,
                                               ),
                                             ),
@@ -197,7 +214,9 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                                                 style: TextStyle(
                                                   fontSize: 18.sp,
                                                   fontWeight: FontWeight.w700,
-                                                  color: Colors.black,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : Colors.black,
                                                 ),
                                               ),
                                               SizedBox(height: 1.h),
@@ -222,9 +241,13 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                                                                     .districtId;
                                                         return ChoiceChip(
                                                           backgroundColor:
-                                                              Colors.white,
+                                                              isDark
+                                                                  ? Colors.grey.shade800
+                                                                  : Colors.white,
                                                           selectedColor:
-                                                              Colors.black,
+                                                              isDark
+                                                                  ? theme.colorScheme.primary
+                                                                  : Colors.black,
                                                           label: Text(
                                                             district.district,
                                                             style: TextStyle(
@@ -232,8 +255,9 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                                                                   selectedDistrict
                                                                       ? Colors
                                                                           .white
-                                                                      : Colors
-                                                                          .black,
+                                                                      : (isDark
+                                                                          ? Colors.white
+                                                                          : Colors.black),
                                                               fontSize: 12.sp,
                                                             ),
                                                           ),
@@ -310,7 +334,9 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                                                 style: TextStyle(
                                                   fontSize: 18.sp,
                                                   fontWeight: FontWeight.w700,
-                                                  color: Colors.black,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : Colors.black,
                                                 ),
                                               ),
                                               SizedBox(height: 1.h),
@@ -335,16 +361,21 @@ class _LocationScreenV2State extends State<LocationScreenV2> {
                                                                     .landmarkId;
                                                         return ChoiceChip(
                                                           backgroundColor:
-                                                              Colors.white,
+                                                              isDark
+                                                                  ? Colors.grey.shade800
+                                                                  : Colors.white,
                                                           selectedColor:
-                                                              Colors.black,
+                                                              isDark
+                                                                  ? theme.colorScheme.primary
+                                                                  : Colors.black,
                                                           label: Text(
                                                             landmark.landmark,
                                                             style: TextStyle(
                                                               color: selectedLandmark
                                                                   ? Colors.white
-                                                                  : Colors
-                                                                      .black87,
+                                                                  : (isDark
+                                                                      ? Colors.white
+                                                                      : Colors.black87),
                                                               fontSize: 11.sp,
                                                             ),
                                                           ),

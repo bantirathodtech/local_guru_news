@@ -9,6 +9,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../../src.dart';
+import 'greeting_customization_screen.dart';
 
 class GreetingsDashboard extends ConsumerStatefulWidget {
   const GreetingsDashboard({Key? key}) : super(key: key);
@@ -27,6 +28,8 @@ class _GreetingsDashboardState extends ConsumerState<GreetingsDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final topicsState = ref.watch(topicsGreetingsControllerProvider);
     final greetingsState = ref.watch(greetingsPaginationControllerProvider);
 
@@ -34,9 +37,11 @@ class _GreetingsDashboardState extends ConsumerState<GreetingsDashboard> {
       child: Scaffold(
         appBar: CustomAppBar(
           title: 'Greetings',
-          backgroundColor: AppColors.primary,
-          iconColor: AppColors.black,
-          titleColor: AppColors.black,
+          backgroundColor: isDark
+              ? Colors.grey.shade900
+              : AppColors.primary,
+          iconColor: isDark ? Colors.white : AppColors.black,
+          titleColor: isDark ? Colors.white : AppColors.black,
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(65),
             child: Container(
@@ -156,11 +161,34 @@ class _GreetingsDashboardState extends ConsumerState<GreetingsDashboard> {
                           return _GreetingCard(
                             greeting: greetingsState.greetings![index],
                             screenshotController: screenshotController,
+                            onTap: () {
+                              // Navigate to customization screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GreetingCustomizationScreen(
+                                    greeting: greetingsState.greetings![index],
+                                  ),
+                                ),
+                              );
+                            },
                             onShare: () async {
                               setState(() {
                                 _loading = true;
                               });
-                              // ... existing share logic
+                              // Navigate to customization screen instead of direct share
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GreetingCustomizationScreen(
+                                    greeting: greetingsState.greetings![index],
+                                  ),
+                                ),
+                              ).then((_) {
+                                setState(() {
+                                  _loading = false;
+                                });
+                              });
                             },
                           );
                         },
@@ -207,11 +235,13 @@ class _GreetingCard extends StatelessWidget {
   final GreetingsModel greeting;
   final ScreenshotController screenshotController;
   final VoidCallback onShare;
+  final VoidCallback onTap;
 
   const _GreetingCard({
     required this.greeting,
     required this.screenshotController,
     required this.onShare,
+    required this.onTap,
   });
 
   @override
@@ -221,7 +251,10 @@ class _GreetingCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Stack(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
@@ -291,6 +324,7 @@ class _GreetingCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

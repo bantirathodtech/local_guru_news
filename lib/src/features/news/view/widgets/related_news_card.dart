@@ -30,6 +30,9 @@ class RelatedNewsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     // Filter related posts by topic, excluding current post
     final relatedPosts = allPosts
         .where((element) =>
@@ -66,7 +69,7 @@ class RelatedNewsCard extends ConsumerWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 20.sp,
-                      color: AppColors.textPrimary,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
                       letterSpacing: -0.3,
                     ),
                   ),
@@ -75,7 +78,9 @@ class RelatedNewsCard extends ConsumerWidget {
                     '${relatedPosts.length > maxItems ? maxItems : relatedPosts.length} related articles',
                     style: TextStyle(
                       fontSize: 12.sp,
-                      color: AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -84,7 +89,7 @@ class RelatedNewsCard extends ConsumerWidget {
             ),
           ],
         ),
-        SizedBox(height: 24),
+        SizedBox(height: 16), // Reduced from 24
         // Related Posts List
         ListView.builder(
           shrinkWrap: true,
@@ -98,8 +103,8 @@ class RelatedNewsCard extends ConsumerWidget {
                                 ? maxItems
                                 : relatedPosts.length) -
                             1
-                    ? 16
-                    : 0),
+                    ? 12
+                    : 0), // Reduced from 16
             child: RelatedNewsItem(
               post: relatedPosts[index],
               allPosts: allPosts,
@@ -123,26 +128,35 @@ class RelatedNewsItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     // Find the index of this post in the full posts list
     final postIndex = allPosts.indexWhere((p) => p.id == post.id);
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey.shade900 : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.grey.withOpacity(0.1),
+          color: isDark
+              ? Colors.grey.shade700.withOpacity(0.3)
+              : Colors.grey.withOpacity(0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.06),
             blurRadius: 12,
             offset: Offset(0, 4),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.03),
             blurRadius: 4,
             offset: Offset(0, 2),
             spreadRadius: 0,
@@ -193,13 +207,13 @@ class RelatedNewsItem extends ConsumerWidget {
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(12), // Reduced from 16
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Thumbnail Section
-                _buildThumbnail(post),
-                SizedBox(width: 16),
+                _buildThumbnail(post, isDark),
+                SizedBox(width: 12), // Reduced from 16
                 // Content Section
                 Expanded(
                   child: Column(
@@ -215,11 +229,11 @@ class RelatedNewsItem extends ConsumerWidget {
                           fontSize: 15.sp,
                           fontWeight: FontWeight.w700,
                           height: 1.4,
-                          color: AppColors.textPrimary,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
                           letterSpacing: -0.2,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: 8), // Reduced from 12
                       // Metadata Row
                       Row(
                         children: [
@@ -228,7 +242,9 @@ class RelatedNewsItem extends ConsumerWidget {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.lightGrey.withOpacity(0.6),
+                              color: isDark
+                                  ? Colors.grey.shade800.withOpacity(0.6)
+                                  : AppColors.lightGrey.withOpacity(0.6),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -237,13 +253,17 @@ class RelatedNewsItem extends ConsumerWidget {
                                 Icon(
                                   FontAwesomeIcons.eye,
                                   size: 11.sp,
-                                  color: AppColors.textSecondary,
+                                  color: isDark
+                                      ? Colors.grey.shade400
+                                      : AppColors.textSecondary,
                                 ),
                                 SizedBox(width: 6),
                                 Text(
                                   _formatViews(post.views ?? '0'),
                                   style: TextStyle(
-                                    color: AppColors.textSecondary,
+                                    color: isDark
+                                        ? Colors.grey.shade400
+                                        : AppColors.textSecondary,
                                     fontSize: 11.sp,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -257,7 +277,9 @@ class RelatedNewsItem extends ConsumerWidget {
                             padding: EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.lightGrey.withOpacity(0.6),
+                              color: isDark
+                                  ? Colors.grey.shade800.withOpacity(0.6)
+                                  : AppColors.lightGrey.withOpacity(0.6),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -266,7 +288,9 @@ class RelatedNewsItem extends ConsumerWidget {
                                 Icon(
                                   FontAwesomeIcons.clock,
                                   size: 11.sp,
-                                  color: AppColors.textSecondary,
+                                  color: isDark
+                                      ? Colors.grey.shade400
+                                      : AppColors.textSecondary,
                                 ),
                                 SizedBox(width: 6),
                                 Text(
@@ -276,7 +300,9 @@ class RelatedNewsItem extends ConsumerWidget {
                                               post.time!)
                                           : ''),
                                   style: TextStyle(
-                                    color: AppColors.textSecondary,
+                                    color: isDark
+                                        ? Colors.grey.shade400
+                                        : AppColors.textSecondary,
                                     fontSize: 11.sp,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -312,7 +338,7 @@ class RelatedNewsItem extends ConsumerWidget {
     }
   }
 
-  Widget _buildThumbnail(PostsModel post) {
+  Widget _buildThumbnail(PostsModel post, bool isDark) {
     final hasVideo = post.layout?.toLowerCase() == 'video' ||
         post.layout?.toLowerCase() == 'youtube';
 
@@ -323,7 +349,9 @@ class RelatedNewsItem extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.4)
+                : Colors.black.withOpacity(0.1),
             blurRadius: 8,
             offset: Offset(0, 2),
             spreadRadius: 0,
@@ -334,7 +362,7 @@ class RelatedNewsItem extends ConsumerWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: _getThumbnailWidget(post),
+            child: _getThumbnailWidget(post, isDark),
           ),
           // Play button overlay for video content
           if (hasVideo)
@@ -372,18 +400,18 @@ class RelatedNewsItem extends ConsumerWidget {
     );
   }
 
-  Widget _getThumbnailWidget(PostsModel post) {
+  Widget _getThumbnailWidget(PostsModel post, bool isDark) {
     if (post.layout == null || post.media == null || post.media!.isEmpty) {
       return Container(
         width: 100,
         height: 100,
         decoration: BoxDecoration(
-          color: AppColors.lightGrey,
+          color: isDark ? Colors.grey.shade800 : AppColors.lightGrey,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           Icons.article_outlined,
-          color: AppColors.textSecondary,
+          color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
           size: 32,
         ),
       );
@@ -394,7 +422,7 @@ class RelatedNewsItem extends ConsumerWidget {
           ? post.media!.first.toString()
           : '';
       if (videoUrl.isEmpty) {
-        return _buildFallbackThumbnail();
+        return _buildFallbackThumbnail(isDark);
       }
       return Container(
         width: 100,
@@ -412,7 +440,7 @@ class RelatedNewsItem extends ConsumerWidget {
           ? post.media!.first.toString()
           : '';
       if (mediaUrl.isEmpty) {
-        return _buildFallbackThumbnail();
+        return _buildFallbackThumbnail(isDark);
       }
       final videoId = YoutubePlayer.convertUrlToId(mediaUrl);
       if (videoId != null && videoId.isNotEmpty) {
@@ -421,39 +449,40 @@ class RelatedNewsItem extends ConsumerWidget {
           height: 100,
           imageUrl: 'https://img.youtube.com/vi/$videoId/0.jpg',
           boxFit: BoxFit.cover,
-          errorWidget: _buildFallbackThumbnail(),
+          errorWidget: _buildFallbackThumbnail(isDark),
         );
       }
-      return _buildFallbackThumbnail();
+      return _buildFallbackThumbnail(isDark);
     } else {
       // Image layout
       final imageUrl = (post.media != null && post.media!.isNotEmpty)
           ? post.media!.first.toString()
           : '';
       if (imageUrl.isEmpty || !_isValidImageUrl(imageUrl)) {
-        return _buildFallbackThumbnail();
+        return _buildFallbackThumbnail(isDark);
       }
       return FancyShimmerImage(
         width: 100,
         height: 100,
         imageUrl: imageUrl,
         boxFit: BoxFit.cover,
-        errorWidget: _buildFallbackThumbnail(),
+        errorWidget: _buildFallbackThumbnail(isDark),
       );
     }
   }
 
-  Widget _buildFallbackThumbnail() {
+  Widget _buildFallbackThumbnail(bool isDark) {
+    
     return Container(
       width: 100,
       height: 100,
       decoration: BoxDecoration(
-        color: AppColors.lightGrey,
+        color: isDark ? Colors.grey.shade800 : AppColors.lightGrey,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(
         Icons.image_not_supported_outlined,
-        color: AppColors.textSecondary,
+        color: isDark ? Colors.grey.shade400 : AppColors.textSecondary,
         size: 32,
       ),
     );

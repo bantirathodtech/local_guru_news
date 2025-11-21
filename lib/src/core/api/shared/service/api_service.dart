@@ -339,21 +339,30 @@ class ApiService {
     return proxied;
   }
 
-  FormData _createFormData(Map<String, dynamic>? data) {
+  FormData _createFormData(dynamic data) {
     if (data == null) return FormData();
-    return FormData.fromMap(data.map((key, value) {
-      if (value is File) {
-        return MapEntry(
-          key,
-          MultipartFile.fromFileSync(
+    
+    // Handle both Map<String, dynamic> and Map<dynamic, dynamic>
+    if (data is Map) {
+      // Convert to Map<String, dynamic> for FormData.fromMap
+      final Map<String, dynamic> formDataMap = {};
+      data.forEach((key, value) {
+        final stringKey = key.toString();
+        if (value is File) {
+          formDataMap[stringKey] = MultipartFile.fromFileSync(
             value.path,
             contentType: MediaType.parse(
               lookupMimeType(value.path) ?? 'application/octet-stream',
             ),
-          ),
-        );
-      }
-      return MapEntry(key, value);
-    }));
+          );
+        } else {
+          formDataMap[stringKey] = value;
+        }
+      });
+      return FormData.fromMap(formDataMap);
+    }
+    
+    // Fallback: create empty FormData if data is not a Map
+    return FormData();
   }
 }

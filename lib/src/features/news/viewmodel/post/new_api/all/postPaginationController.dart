@@ -8,9 +8,27 @@ final postPaginationControllerProvider =
   final selectedTopicId = ref.watch(topicId);
   final selectedTopicType = ref.watch(topicType);
   final userIdValue = ref.watch(userIdProvider);
-  final landmarkIdValue = ref.watch(locationLandmark);
-  final stateIdValue = ref.watch(locationState);
-  final districtIdValue = ref.watch(locationDistrict);
+  
+  // For location topic, use news location ID providers, otherwise use persisted location
+  final newsStateId = ref.watch(selectedNewsStateIdProvider);
+  final newsDistrictId = ref.watch(selectedNewsDistrictIdProvider);
+  final newsLandmarkId = ref.watch(selectedNewsLandmarkIdProvider);
+  final persistedLandmarkId = ref.watch(locationLandmark);
+  final persistedStateId = ref.watch(locationState);
+  final persistedDistrictId = ref.watch(locationDistrict);
+  
+  // Use news location IDs if location topic is selected, otherwise use persisted location
+  final stateIdValue = selectedTopicType.toLowerCase() == 'location' && newsStateId != null
+      ? newsStateId
+      : persistedStateId;
+  final districtIdValue = selectedTopicType.toLowerCase() == 'location' && newsDistrictId != null
+      ? newsDistrictId
+      : persistedDistrictId;
+  final landmarkIdValue = selectedTopicType.toLowerCase() == 'location' && newsLandmarkId != null
+      ? newsLandmarkId
+      : persistedLandmarkId;
+  
+  final postsRepository = ref.read(postsRepositoryProvider);
   return PostPaginationController(
     selectedTopicId,
     selectedTopicType,
@@ -18,6 +36,7 @@ final postPaginationControllerProvider =
     landmarkIdValue,
     stateIdValue,
     districtIdValue,
+    postsRepository,
   );
 });
 
@@ -28,11 +47,18 @@ class PostPaginationController extends StateNotifier<PostsPagination> {
   final String landmarkId;
   final String stateId;
   final String districtId;
+  final PostsRepository _postsRepository;
   bool _isLoading = false;
 
-  PostPaginationController(this.topicId, this.topicType, this.userId,
-      this.landmarkId, this.stateId, this.districtId)
-      : super(PostsPagination.initial()) {
+  PostPaginationController(
+    this.topicId,
+    this.topicType,
+    this.userId,
+    this.landmarkId,
+    this.stateId,
+    this.districtId,
+    this._postsRepository,
+  ) : super(PostsPagination.initial()) {
     // Auto-load posts when controller is created
     getPosts();
   }
@@ -46,24 +72,85 @@ class PostPaginationController extends StateNotifier<PostsPagination> {
     }
 
     AppLogger.logInfo(
-        'getPosts called for topicId=$topicId, page=${state.page}, userId=$userId, stateId=$stateId, districtId=$districtId, landmarkId=$landmarkId');
+        'getPosts called for topicId=$topicId, topicType=$topicType, page=${state.page}, userId=$userId, stateId=$stateId, districtId=$districtId, landmarkId=$landmarkId');
 
     _isLoading = true;
     try {
       final currentPage = state.page ?? 1;
-      final resolvedLandmarkId = _resolveLocationId(landmarkId);
-      final resolvedStateId = _resolveLocationId(stateId);
-      final resolvedDistrictId = _resolveLocationId(districtId);
-      final posts = await PostPaginationService.fetchPosts(
-        topicId: topicId,
-        topicType: topicType,
-        page: currentPage,
-        userId: userId,
-        landmarkId: resolvedLandmarkId,
-        stateId: resolvedStateId,
-        districtId: resolvedDistrictId,
-        editorId: userId,
-      );
+      List<PostsModel> posts;
+
+      // Check if "Latest News" is selected (topicId is '0' or type is 'latest')
+      final isLatestNews =
+          topicId == '0' || topicId.isEmpty || topicType == 'latest';
+
+      if (isLatestNews) {
+        // Use getAllPosts API for "Latest News"
+        AppLogger.logInfo('Fetching all posts (Latest News)');
+        posts = await _postsRepository.getAllPosts(
+          page: currentPage,
+          limit: 20,
+        );
+      } else {
+        // Use getPostsByTopic API for filtered posts
+        AppLogger.logInfo(
+            'Fetching posts by topic: topicId=$topicId, topicType=$topicType');
+
+        // Extract topicId if it's in format "topic/1" or just "1"
+        String? resolvedTopicId = topicId;
+        if (topicId.contains('/')) {
+          resolvedTopicId = topicId.split('/').last;
+        }
+        if (resolvedTopicId == '0' || resolvedTopicId.isEmpty) {
+          resolvedTopicId = null;
+        }
+
+        // Determine additional parameters based on topicType
+        String? politicianId;
+        String? stateIdParam;
+        String? districtIdParam;
+        String? landmarkIdParam;
+        String? editorUserId;
+
+        switch (topicType.toLowerCase()) {
+          case 'politician':
+            // For politician, we need politicianId from filters
+            // This will be handled by the filter system
+            politicianId = null; // Will be set from filter state
+            break;
+          case 'location':
+            // For location, use stateId (required), districtId and landmarkId (optional)
+            if (stateId.isNotEmpty && stateId != '0') {
+              stateIdParam = stateId;
+            }
+            if (districtId.isNotEmpty && districtId != '0') {
+              districtIdParam = districtId;
+            }
+            if (landmarkId.isNotEmpty && landmarkId != '0') {
+              landmarkIdParam = landmarkId;
+            }
+            break;
+          case 'editor':
+            editorUserId = userId;
+            break;
+          case 'topic':
+          default:
+            // For regular topics, just use topicId
+            break;
+        }
+
+        posts = await _postsRepository.getPostsByTopic(
+          page: currentPage,
+          topicType: topicType,
+          topicId: resolvedTopicId,
+          politicianId: politicianId,
+          stateId: stateIdParam,
+          districtId: districtIdParam,
+          landmarkId: landmarkIdParam,
+          userId: editorUserId,
+          limit: 20,
+        );
+      }
+
       if (!mounted) {
         _isLoading = false;
         return;
@@ -124,13 +211,6 @@ class PostPaginationController extends StateNotifier<PostsPagination> {
       getPosts();
     }
   }
-}
-
-String _resolveLocationId(String value) {
-  if (value.isEmpty || value.toLowerCase() == 'null') {
-    return '0';
-  }
-  return value;
 }
 
 // import 'package:flutter_riverpod/flutter_riverpod.dart';

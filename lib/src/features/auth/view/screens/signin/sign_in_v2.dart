@@ -56,11 +56,13 @@ class _SignInScreenV2State extends State<SignInScreenV2> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Sign In (V2)')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
@@ -128,6 +130,7 @@ class _SignInScreenV2State extends State<SignInScreenV2> {
               Text(auth.error!, style: const TextStyle(color: Colors.red)),
             ],
           ],
+          ),
         ),
       ),
     );

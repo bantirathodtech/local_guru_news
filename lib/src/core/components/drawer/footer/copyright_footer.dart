@@ -9,26 +9,36 @@ class CopyrightFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color ?? 
+                     (theme.brightness == Brightness.dark 
+                      ? Colors.white70 
+                      : AppColors.textSecondary);
+    
     return Container(
       padding: const EdgeInsets.only(bottom: 16), // 16px space from bottom
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
           child: RichText(
+            textAlign: TextAlign.center,
             text: TextSpan(
               children: [
                 TextSpan(
                   text: 'Copyright \u00a9 ${DateTime.now().year} ',
                   style: TextStyle(
-                    color: Colors.black.withOpacity(0.6),
+                    color: textColor.withOpacity(0.7),
                     letterSpacing: 1,
+                    fontSize: 12,
                   ),
                 ),
                 TextSpan(
                   text: 'Suvidha Softwares.',
-                  style: const TextStyle(
-                    color: AppColors.primary,
+                  style: TextStyle(
+                    color: AppColors.accent,
                     letterSpacing: 1,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () async {
@@ -44,8 +54,9 @@ class CopyrightFooter extends StatelessWidget {
                 TextSpan(
                   text: ' All rights reserved',
                   style: TextStyle(
-                    color: Colors.black.withOpacity(0.4),
+                    color: textColor.withOpacity(0.6),
                     letterSpacing: 1,
+                    fontSize: 12,
                   ),
                 ),
               ],

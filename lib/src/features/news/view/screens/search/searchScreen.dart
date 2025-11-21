@@ -23,7 +23,7 @@ class SearchScreen extends StatelessWidget {
       ),
       body: Consumer(
         builder: (context, ref, child) {
-          final topicsState = ref.watch(topicsControllerProvider);
+          final topicsState = ref.watch(topicsProvider);
           return Container(
             child: Builder(
               builder: (context) {

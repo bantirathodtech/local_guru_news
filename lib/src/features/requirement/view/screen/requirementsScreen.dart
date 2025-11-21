@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:local_guru_all/src/features/requirement/data/model/requirementsModel.dart';
 
 import '../../../../src.dart';
 

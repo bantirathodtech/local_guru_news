@@ -32,13 +32,14 @@ extension TimeAgo on String {
     }
 
     final now = DateTime.now();
-    final difference = now.difference(parsed.isUtc ? parsed.toLocal() : parsed);
+    final localDate = parsed.isUtc ? parsed.toLocal() : parsed;
+    final difference = now.difference(localDate);
     if (difference.isNegative) {
-      return 'Just now';
+      return _formatDate(localDate);
     }
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return _formatDate(localDate);
     } else if (difference.inHours < 1) {
       final minutes = difference.inMinutes;
       return '$minutes minute${minutes == 1 ? '' : 's'} ago';
@@ -75,5 +76,9 @@ extension TimeAgo on String {
     }
 
     return null;
+  }
+
+  static String _formatDate(DateTime date) {
+    return DateFormat('dd MMM yyyy, hh:mm a').format(date);
   }
 }

@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
+import 'package:local_guru_all/src/core/constants/app_colors.dart';
 import 'package:sizer/sizer.dart';
 
 class ListsDetails extends StatefulWidget {
@@ -33,13 +34,17 @@ class ListsDetails extends StatefulWidget {
 class _ListsDetailsState extends State<ListsDetails> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: isDark ? Colors.grey.shade900 : AppColors.primary,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(
             Icons.chevron_left_rounded,
-            color: Colors.black,
+            color: isDark ? Colors.white : Colors.black,
           ),
         ),
       ),

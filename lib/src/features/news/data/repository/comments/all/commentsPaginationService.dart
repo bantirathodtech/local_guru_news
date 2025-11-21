@@ -45,7 +45,10 @@ class CommentsRepository {
           .map(CommentsModel.fromJson)
           .toList(growable: false);
     } catch (error) {
-      throw Exception('Failed to fetch comments: $error');
+      // Handle 404 and other errors gracefully - return empty list instead of crashing
+      // The error is already logged by ApiLoggingHelper
+      // This prevents app crashes when the comments API is not available
+      return const [];
     }
   }
 
